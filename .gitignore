@@ -1,0 +1,15 @@
+*.data
+*.a
+*.o
+*.mod
+*.smod
+LOGS/*
+LOGS1/*
+LOGS2/*
+log1
+log2
+output.txt
+*.txt
+photos/*
+*cache*
+mesa_temp_cache/*
