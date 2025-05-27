@@ -1,14 +1,15 @@
 &star_job
 
+pgstar_flag = .true.
+
 show_log_description_at_start             = .false.
 show_timestep_limit_counts_when_terminate = .true.
-save_model_when_terminate                 = .true.
-required_termination_code_string(1)       = 'fe_core_infall_limit'
-write_profile_when_terminate              = .true.
-
+! save_model_when_terminate                 = .true.
+! required_termination_code_string(1)       = 'fe_core_infall_limit'
+! write_profile_when_terminate              = .true.
 
 ! change_net                                = .true.
-! new_net_name                              = 'mesa_128.net'
+! new_net_name                              = 'mesa_206.net' ! for production runs
 
 set_initial_age                           = .true.
 initial_age                               = 0
