@@ -1,0 +1,212 @@
+&star_job
+
+show_log_description_at_start             = .false.
+show_timestep_limit_counts_when_terminate = .true.
+save_model_when_terminate                 = .true.
+required_termination_code_string(1)       = 'fe_core_infall_limit'
+write_profile_when_terminate              = .true.
+
+
+! change_net                                = .true.
+! new_net_name                              = 'mesa_128.net'
+
+set_initial_age                           = .true.
+initial_age                               = 0
+
+set_initial_model_number                  = .true.
+initial_model_number                      = 0
+
+pgstar_flag                               = .true.
+
+change_v_flag                             = .true.
+new_v_flag                                = .true.
+
+change_initial_Z                          = .true.
+new_Z                                     = 0.02d0
+
+! num_special_rate_factors                  = 2
+! reaction_for_special_factor(1)            = 'r_c12_ag_o16'
+! special_rate_factor(1)                    = 1
+! filename_of_special_rate(1)               = 'r_c12_ag_o16_kunz.txt'
+
+! reaction_for_special_factor(2)            = 'r_he4_he4_he4_to_c12'
+! special_rate_factor(2)                    = 1
+! filename_of_special_rate(2)               = 'r_he4_he4_he4_to_c12_cf88.txt'
+
+/ ! end of star_job namelist
+
+
+&eos
+use_Skye                                  = .true.
+use_PC                                    = .false.
+/ ! end of eos namelist
+
+
+&kap
+use_Type2_opacities                       = .true.
+Zbase                                     = 0.02d0
+/
+
+
+&controls
+
+energy_eqn_option                         = 'dedt'
+include_composition_in_eps_grav           = .true.
+use_superad_reduction                     = .true.
+
+!atmosphere
+atm_option                                = 'T_tau'
+atm_T_tau_relation                        = 'Eddington'
+atm_T_tau_opacity                         = 'fixed'
+Pextra_factor                             = 2.0 ! put a bit of a lid on the star
+use_compression_outer_BC                  = .true.
+
+!wind
+hot_wind_scheme                           = 'Dutch'
+cool_wind_RGB_scheme                      = 'Dutch'
+cool_wind_AGB_scheme                      = 'Dutch'
+Dutch_scaling_factor                      = 1.0
+mdot_omega_power                          = 0.43d0
+
+! mixing
+! MLT_option                              = 'TDC'
+! alpha_TDC_DAMP                          = 1d0
+! alpha_TDC_DAMPR                         = 1d0
+! alpha_TDC_PtdVdt                        = 1d0
+MLT_option                                = 'Henyey'
+use_ledoux_criterion                      = .false.
+mixing_length_alpha                       = 1.5d0
+min_convective_gap                        = 1.0d0
+alpha_semiconvection                      = 0.0d0
+thermohaline_coeff                        = 0.0d0
+mlt_make_surface_no_mixing                = .true.
+convergence_ignore_equL_residuals         = .true.
+
+! overshoot controls
+! overshoot_scheme(1)                     = 'exponential'
+! overshoot_zone_type(1)                  = 'any'
+! overshoot_zone_loc(1)                   = 'core'
+! overshoot_bdy_loc(1)                    = 'any'
+! overshoot_f(1)                          = 4.25d-2
+! overshoot_f0(1)                         = 0.001d0
+
+! Brott+11
+overshoot_scheme(1)                       = 'step'
+overshoot_zone_type(1)                    = 'any'
+overshoot_zone_loc(1)                     = 'core'
+overshoot_bdy_loc(1)                      = 'any'
+overshoot_f(1)                            = 0.345d0
+overshoot_f0(1)                           = 0.01d0
+
+! for late burning
+op_split_burn                             = .true. ! by default above logT>9.2
+op_split_burn_eps                         = 1d-5   ! default
+op_split_burn_odescal                     = 1d-5   ! default
+dX_nuc_drop_limit                         = 1d-2
+delta_Ye_highT_limit                      = 1d-3
+max_safe_logT_for_rates                   = 10.5d0
+min_dq_for_xa                             = 1d-4
+
+! high T burning resolution
+delta_XHe_cntr_limit                      = 0.001d0
+delta_XHe_cntr_hard_limit                 = 0.025d0
+delta_XC_cntr_limit                       = 0.001d0
+delta_XC_cntr_hard_limit                  = 0.025d0
+delta_XNe_cntr_limit                      = 0.001d0
+delta_XNe_cntr_hard_limit                 = 0.005d0
+delta_XO_cntr_limit                       = 0.001d0
+delta_XO_cntr_hard_limit                  = 0.025d0
+delta_XSi_cntr_limit                      = 0.003d0
+delta_XSi_cntr_hard_limit                 = 0.01d0
+dX_nuc_drop_limit_at_high_T               = -1 ! for center logT > 9.45
+min_xa_hard_limit                         = -1d-4
+min_xa_hard_limit_for_highT               = -1d-3
+logT_max_for_min_xa_hard_limit            = 8.75d0
+logT_min_for_min_xa_hard_limit_for_highT  = 9.0d0
+
+! rotation and mixing:
+am_nu_ST_factor                           = 1.0d0
+D_visc_factor                             = 0.0d0
+am_nu_SH_factor                           = 0.0d0
+D_ST_factor                               = 0.0d0
+D_SH_factor                               = 1.0d0
+D_GSF_factor                              = 1.0d0
+D_ES_factor                               = 1.0d0
+D_SSI_factor                              = 1.0d0
+D_DSI_factor                              = 1.0d0
+am_D_mix_factor                           = 0.03333d0
+am_gradmu_factor                          = 0.1d0
+premix_omega                              = .true.
+remove_small_D_limit                      = 1d-10
+mixing_D_limit_for_log                    = 1d-10
+max_mdot_jump_for_rotation                = 1.5d0
+! smooth mixing coefficients across 2 adjacent cells to avoid infinite derivatives
+smooth_D_DSI                              = 2
+smooth_D_SH                               = 2
+smooth_D_SSI                              = 2
+smooth_D_ES                               = 2
+smooth_D_GSF                              = 2
+smooth_D_ST                               = 2
+smooth_nu_ST                              = 2
+
+! resolution
+! time
+!max_model_number                          = 15000
+min_timestep_limit                        = 1d-18
+varcontrol_target                         = 1d-3
+time_delta_coeff                          = 1.0d0
+max_timestep_factor                       = 1.1d0
+min_J_div_delta_J                         = 50d0 ! 15d0
+dt_div_min_dr_div_cs_limit                = 0.7d0
+dt_div_min_dr_div_cs_hard_limit           = 0.85d0
+
+! space
+mesh_delta_coeff                          = 1.0d0
+mesh_delta_coeff_for_highT                = 3.0d0
+logT_max_for_standard_mesh_delta_coeff    = 9.2d0
+logT_min_for_highT_mesh_delta_coeff       = 9.3d0
+max_dq                                    = 1d-3 ! at least 1000 zones
+max_allowed_nz                            = 20000
+
+! Smooth Brunt-Vaisala frequency profiles
+set_min_D_mix                             = .true.
+min_D_mix                                 = 1d4 ! -2
+
+! solver
+gold2_tol_max_residual2                   = 5e-07
+gold_tol_max_residual2                    = 0.0005
+gold2_tol_max_residual3                   = 0.0005
+maxT_for_gold_tolerances                  = 1d9
+make_gradr_sticky_in_solver_iters         = .true.
+
+velocity_tau_lower_bound                  = 1d4
+
+max_q_for_conv_timescale                  = 0.2d0
+max_X_for_conv_timescale                  = 1d-6   ! must be > 0
+min_dq_for_xa                             = 3d-4
+sum_xa_hard_limit_for_highT               = 0.5d-2
+logT_max_for_sum_xa_hard_limit            = 9.40d0
+
+sig_min_factor_for_high_Tcenter           = 0.01d0
+Tcenter_min_for_sig_min_factor_full_on    = 3.2d9
+Tcenter_max_for_sig_min_factor_full_off   = 2.8d9
+
+delta_lgRho_cntr_limit                    = 0.01d0
+delta_lgRho_cntr_hard_limit               = 0.1d0
+delta_lgRho_limit                         = 0.1d0
+
+delta_lgT_cntr_limit                      = 0.003d0
+delta_lgT_cntr_hard_limit                 = 0.1d0
+
+delta_lgT_max_limit_only_after_near_zams  = .true.
+delta_lgT_max_limit                       = 0.003d0
+delta_lgT_max_hard_limit                  = 0.1d0
+
+! !!!!!!! when to stop -- reimplemented in run_star_extras.f90
+! non_fe_core_infall_limit                  = 1d99
+! non_fe_core_infall_mass                   = 1d99
+! fe_core_infall_limit                      = 0.3d8
+! when_to_stop_rtol                         = 1d-2
+! when_to_stop_atol                         = 1d-3
+
+/ ! end of controls namelist
