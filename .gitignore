@@ -15,3 +15,5 @@ photos/*
 mesa_temp_cache/*
 star
 binary
+png/*
+*.png
