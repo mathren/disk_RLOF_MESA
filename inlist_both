@@ -25,6 +25,11 @@ new_v_flag                                = .true.
 change_initial_Z                          = .true.
 new_Z                                     = 0.02d0
 
+
+change_rotation_flag = .true.
+change_initial_rotation_flag = .true.
+new_rotation_flag = .true.
+
 ! num_special_rate_factors                  = 2
 ! reaction_for_special_factor(1)            = 'r_c12_ag_o16'
 ! special_rate_factor(1)                    = 1
