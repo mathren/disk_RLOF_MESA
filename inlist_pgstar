@@ -1,7 +1,7 @@
 &pgstar
 
 ! this updates the panels for each star but not the binary panel on the right, see inlist_pgbinary
-pgstar_interval                         = 10
+pgstar_interval                         = 1
 !pause                                  = .true.
 
 pgstar_age_disp                         = 2.5
