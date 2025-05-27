@@ -1,0 +1,17 @@
+#+title: Stable mass transfer 2.0 @ CCA
+
+* Objective
+
+Implement in MESA =run_binary_extras.f90= physically motivated
+alternative to rotationally-limited MT, possibly accounting for disk
+wind and L2 losses.
+
+Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
+
+
+* References or background material
+- [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..597P/abstract][Paczynski 1991]],
+- [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..604P/abstract][Popham & Narayan 1991]]
+- [[https://ui.adsabs.harvard.edu/abs/1994MNRAS.269..557B/abstract][Bisnovatyi-Kogan 1994]]
+- [[https://ui.adsabs.harvard.edu/abs/1991MNRAS.253...55C/abstract][Colpi et al. 1994]]
+- more?
