@@ -8,7 +8,6 @@ wind and L2 losses.
 
 Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
 
-
 * References or background material
 - [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..597P/abstract][Paczynski 1991]],
 - [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..604P/abstract][Popham & Narayan 1991]]
