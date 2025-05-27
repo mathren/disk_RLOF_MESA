@@ -1,6 +1,6 @@
 &star_job
 
-pgstar_flag = .true.
+! pgstar_flag = .true.
 
 show_log_description_at_start             = .false.
 show_timestep_limit_counts_when_terminate = .true.

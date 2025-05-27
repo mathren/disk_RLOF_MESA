@@ -3,8 +3,7 @@
 inlist_names(1)               = 'inlist1'
 inlist_names(2)               = 'inlist2'
 
-evolve_both_stars             = .false.
-pgbinary_flag                 = .true.
+evolve_both_stars             = .true.
 
 / ! end of binary_job namelist
 
