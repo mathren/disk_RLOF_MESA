@@ -1,11 +1,5 @@
-
-! inlist_test_rlo
-
-
-
 &star_job
 
-      mesa_dir = ''
       show_log_description_at_start = .true.
 
       pgstar_flag = .false.
@@ -30,13 +24,13 @@
 
 &controls
 
-      extra_terminal_output_file = 'log1'
+      ! extra_terminal_output_file = 'log1'
       log_directory = 'LOGS1'
 
-      profile_interval = 50
+      profile_interval = 500
       history_interval = 1
       terminal_interval = 1
-      write_header_frequency = 10
+      write_header_frequency = 1
 
 / ! end of controls namelist
 

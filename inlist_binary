@@ -20,5 +20,6 @@
    use_other_accreted_material_j = .true.
    ! use_other_rlo_mdot = .false.
 
+    write_header_frequency = 1
 
 / ! end of binary_controls namelist
