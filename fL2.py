@@ -27,16 +27,8 @@ mu_gas = (
 def kap(rho, T):
     """
     Calculate Kramer's opacity (approximate).
-    Parameters
-    ----------
-    rho : float
-      Mass density (in cgs units, e.g., g/cm^3).
-    T : float
-      Temperature (in Kelvin).
-    Returns
-    -------
-    float
-      Opacity (in cm^2/g), calculated using a simplified Kramer's law formula.
+    Input: rho [g/cm^3], T [Kelvin]
+    Output: kappa [cm^2/g]
     """
     kappa = 0.34 + 3.0e24 * rho * T**-3.5
     return kappa
@@ -200,51 +192,47 @@ def calculate_L2_mass_loss_fraction(
 
     if the < the_max:  # this is the correct solution
         fL2 = eps_small
-        return fL2
+    else:
+        the_min = (
+            1.0 / 2 * np.sqrt((PhiL2 - PhiRd) / (GM2 / Rd) - 1.0 / 2)
+        )  # corresponding to fL2=1, T=0
+        # need to find the maximum corresponding to fL2=0
+        # this is given by the intersection between T_the(the), T_the_nofL2(the)
+        the_left = the_min
+        the_right = 1.0
+        f_left = T_the(the_left) - T_the_nofL2(the_left)
+        while abs((the_left - the_right) / the_right) > tol:
+            the = (the_left + the_right) / 2
+            f = T_the(the) - T_the_nofL2(the)
+            if f * f_left > 0:
+                the_left = the
+                f_left = f
+            else:
+                the_right = the
+        the_max = (the_left + the_right) / 2  # this corresponds to fL2=0
 
-    # ---- below is for fL2 \neq 0
+        # --- numerical solution for f2(the, T, fL2)=0 under non-zero fL2
 
-    the_min = (
-        1.0 / 2 * np.sqrt((PhiL2 - PhiRd) / (GM2 / Rd) - 1.0 / 2)
-    )  # corresponding to fL2=1, T=0
-    # need to find the maximum corresponding to fL2=0
-    # this is given by the intersection between T_the(the), T_the_nofL2(the)
-    the_left = the_min
-    the_right = 1.0
-    f_left = T_the(the_left) - T_the_nofL2(the_left)
-    while abs((the_left - the_right) / the_right) > tol:
+        # -- do not use exactly the_min (corresponding to T = 0, bc. kap table breaks down)
+        # -- define another the_min based on T_floor (kap table won't be a problem)
+        the_min = np.sqrt(
+            3.0 / 8 * c2 * T_floor + 1.0 / 4 * (PhiL2 - PhiRd) / (GM2 / Rd) - 1.0 / 8
+        )
+        the_left = the_min
+        f2_left = f2_the_T_fL2(the_left, T_the(the_left), fL2_the(the_left))
+        the_right = the_max / (1 + eps_small)
+        # bisection again
+        while abs((the_left - the_right) / the_right) > tol:
+            the = (the_left + the_right) / 2
+            f2 = f2_the_T_fL2(the, T_the(the), fL2_the(the))
+            if f2 * f2_left > 0:
+                the_left = the
+                f2_left = f2
+            else:
+                the_right = the
+        # solution
         the = (the_left + the_right) / 2
-        f = T_the(the) - T_the_nofL2(the)
-        if f * f_left > 0:
-            the_left = the
-            f_left = f
-        else:
-            the_right = the
-    the_max = (the_left + the_right) / 2  # this corresponds to fL2=0
-
-    # --- numerical solution for f2(the, T, fL2)=0 under non-zero fL2
-
-    # -- do not use exactly the_min (corresponding to T = 0, bc. kap table breaks down)
-    # -- define another the_min based on T_floor (kap table won't be a problem)
-    the_min = np.sqrt(
-        3.0 / 8 * c2 * T_floor + 1.0 / 4 * (PhiL2 - PhiRd) / (GM2 / Rd) - 1.0 / 8
-    )
-    the_left = the_min
-    f2_left = f2_the_T_fL2(the_left, T_the(the_left), fL2_the(the_left))
-    the_right = the_max / (1 + eps_small)
-    # bisection again
-    while abs((the_left - the_right) / the_right) > tol:
-        the = (the_left + the_right) / 2
-        f2 = f2_the_T_fL2(the, T_the(the), fL2_the(the))
-        if f2 * f2_left > 0:
-            the_left = the
-            f2_left = f2
-        else:
-            the_right = the
-    # solution
-    the = (the_left + the_right) / 2
-    T = T_the(the)
-    fL2 = fL2_the(the)
+        fL2 = fL2_the(the)
 
     return fL2
 
