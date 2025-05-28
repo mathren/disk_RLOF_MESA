@@ -10,8 +10,8 @@ pgbinary_flag                 = .true.
 &binary_controls
 
 m1                            = 20.0d0  ! donor mass in Msun
-m2                            = 17.0d0 ! companion mass in Msun
-initial_period_in_days        = 100d0
+m2                            = 15.0d0 ! companion mass in Msun
+initial_period_in_days        = 150d0
 
 !transfer efficiency controls
 limit_retention_by_mdot_edd   = .false.
@@ -37,7 +37,7 @@ do_tidal_sync                 = .true.
 do_j_accretion                = .false. ! if .true. use A.3.3 of de Mink et al. 2013, ApJ, 764, 166
 ! be 100% sure MB is always off
 do_jdot_mb                    = .false.
-do_jdot_missing_wind          = .true.
+do_jdot_missing_wind          = .true.   ! probably needs to be turned off
 
 ! ! timestep controls
 varcontrol_case_a             = 1d-4
