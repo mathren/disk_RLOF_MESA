@@ -80,11 +80,11 @@ MLT_option                              = 'TDC'
 ! alpha_TDC_DAMPR                         = 1d0
 ! alpha_TDC_PtdVdt                        = 1d0
 ! MLT_option                                = 'Henyey'
-! use_ledoux_criterion                      = .true.
-! mixing_length_alpha                       = 2.0d0
+use_ledoux_criterion                      = .false.
+mixing_length_alpha                       = 2.0d0
 ! min_convective_gap                        = 1.0d0
-! alpha_semiconvection                      = 1.0d0
-! thermohaline_coeff                        = 1000.0d0
+alpha_semiconvection                      = 1.0d0
+thermohaline_coeff                        = 1000.0d0
 ! mlt_make_surface_no_mixing                = .true.
 ! convergence_ignore_equL_residuals         = .true.
 
