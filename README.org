@@ -1,0 +1,37 @@
+#+title: Stable mass transfer 2.0 @ CCA
+
+* Objective
+
+Implement in MESA =run_binary_extras.f90= physically motivated
+alternative to rotationally-limited MT, possibly accounting for disk
+wind and L2 losses.
+
+Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
+
+* References or background material
+- [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..597P/abstract][Paczynski 1991]],
+- [[https://ui.adsabs.harvard.edu/abs/1991ApJ...370..604P/abstract][Popham & Narayan 1991]]
+- [[https://ui.adsabs.harvard.edu/abs/1994MNRAS.269..557B/abstract][Bisnovatyi-Kogan 1994]]
+- [[https://ui.adsabs.harvard.edu/abs/1991MNRAS.253...55C/abstract][Colpi et al. 1994]]
+- [[https://academic.oup.com/mnras/article/519/1/1409/6886566][Lu et al. 2022 (L2 mass loss)]]
+- https://adsabs.harvard.edu/full/1994PASJ...46..621I
+- https://academic.oup.com/mnras/article/181/3/441/988438
+- https://ui.adsabs.harvard.edu/abs/1977ApJ...216..822P/abstract
+
+* Initial discussion:
+
+- the disk always fits within the Roche lobe (no truncation needed)
+- L2 mass loss is energetically possible (cf.
+  [[https://github.com/wenbinlu/L2massloss][L2 mass loss code]]), but can be added later
+- the important thing to implement are dot(M2) and dot(J2) through the boundary layers.
+** Input & outputs
+
+Input: $\dot{M1}$, \omega_{accretor, surf}, M_{1}, M_{2}, a
+Output: $\dot{M2}$, $\dot{J_{}}_{2}$
+
+Routines to be used:
+- =mod_other_accreted_material_j.f90=
+- =mod_other_adjust_mdots.f90=
+
+*N.B.:* we should also use the [[https://ui.adsabs.harvard.edu/abs/1975ApJ...198..383L/abstract][Lubow & Shu 1975]] results to use this
+ *only if* a disk does form (not for direct impact)
