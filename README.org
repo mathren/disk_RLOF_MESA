@@ -26,8 +26,8 @@ Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
 - the important thing to implement are dot(M2) and dot(J2) through the boundary layers.
 ** Input & outputs
 
-Input: $\dot{M1}$, $\omega_{accretor, surf}$, $M_{1}$, $M_{2}$, $a$
-Output: $\dot{M2}$, $\dot{J_{2}}$
+Input: $\dot{M1}$, \omega_{accretor, surf}, M_{1}, M_{2}, a
+Output: $\dot{M2}$, $\dot{J_{}}_{2}$
 
 Routines to be used:
 - =mod_other_accreted_material_j.f90=
