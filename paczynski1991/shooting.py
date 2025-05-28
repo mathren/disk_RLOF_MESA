@@ -12,14 +12,14 @@ import pdb
 # Rp = accretor polar radius = 1 (this defines Rp = R_star in P+91)
 
 # Dimensionless free parameters (Paczynski+1991)
-a_inv = 0.2
+a_inv = 0.1
 ω_s = 0.5
 
 n = 1.5 # polytropic index (n=3/2 is γ=5/3)
 
 # Chosen for numerical reasons (x -> non-dim'd r)
-x_out = 100 # outer boundary condition (where disk is approximately Keplerian)
-x_match = 50 # matching point
+x_out = 10 # outer boundary condition (where disk is approximately Keplerian)
+x_match = 5 # matching point
 x_in = 0.8 # inner boundary condition (within star but not totally)
 method = 'Radau'
 
@@ -63,7 +63,24 @@ def get_Z_match_from_in(j_star):
 
     assert res.success
     Z_match = res.y[:,0]
+
+    # test
+    x_arr = np.linspace(x_in, x_match, 100)
+    res = solve_ivp(get_dZ_dx, [x_in, x_match], get_Z_in(), t_eval=x_arr, args=[j_star], method=method)
+
+    x, Z = res.t, res.y
+    ω, y = res.y[0], res.y[1]
     
+    plt.close()
+    plt.plot(x, ω, label='ω')
+    plt.plot(x, y, label='y')
+    plt.yscale('log')
+    plt.legend(loc='upper right')
+    plt.show()
+
+    
+
+
     return Z_match
 
 def get_Z_match_from_out(j_star):
