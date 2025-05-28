@@ -71,7 +71,7 @@ use_compression_outer_BC                  = .true.
 hot_wind_scheme                           = 'Dutch'
 cool_wind_RGB_scheme                      = 'Dutch'
 cool_wind_AGB_scheme                      = 'Dutch'
-Dutch_scaling_factor                      = 1.0
+Dutch_scaling_factor                      = 0.8
 mdot_omega_power                          = 0.43d0
 
 ! mixing
@@ -89,20 +89,20 @@ mlt_make_surface_no_mixing                = .true.
 convergence_ignore_equL_residuals         = .true.
 
 ! overshoot controls
-! overshoot_scheme(1)                     = 'exponential'
-! overshoot_zone_type(1)                  = 'any'
-! overshoot_zone_loc(1)                   = 'core'
-! overshoot_bdy_loc(1)                    = 'any'
-! overshoot_f(1)                          = 4.25d-2
-! overshoot_f0(1)                         = 0.001d0
+overshoot_scheme(1)                     = 'exponential'
+overshoot_zone_type(1)                  = 'any'
+overshoot_zone_loc(1)                   = 'core'
+overshoot_bdy_loc(1)                    = 'any'
+overshoot_f(1)                          = 4.25d-2
+overshoot_f0(1)                         = 0.001d0
 
 ! Brott+11
-overshoot_scheme(1)                       = 'step'
-overshoot_zone_type(1)                    = 'any'
-overshoot_zone_loc(1)                     = 'core'
-overshoot_bdy_loc(1)                      = 'any'
-overshoot_f(1)                            = 0.345d0
-overshoot_f0(1)                           = 0.01d0
+! overshoot_scheme(1)                       = 'step'
+! overshoot_zone_type(1)                    = 'any'
+! overshoot_zone_loc(1)                     = 'core'
+! overshoot_bdy_loc(1)                      = 'any'
+! overshoot_f(1)                            = 0.345d0
+! overshoot_f0(1)                           = 0.01d0
 
 ! for late burning
 op_split_burn                             = .true. ! by default above logT>9.2
@@ -135,7 +135,7 @@ am_nu_ST_factor                           = 1.0d0
 D_visc_factor                             = 0.0d0
 am_nu_SH_factor                           = 0.0d0
 D_ST_factor                               = 0.0d0
-D_SH_factor                               = 1.0d0
+D_SH_factor                               = 0.0d0 ! 1.0d0
 D_GSF_factor                              = 1.0d0
 D_ES_factor                               = 1.0d0
 D_SSI_factor                              = 1.0d0
@@ -214,5 +214,6 @@ delta_lgT_max_hard_limit                  = 0.1d0
 ! fe_core_infall_limit                      = 0.3d8
 ! when_to_stop_rtol                         = 1d-2
 ! when_to_stop_atol                         = 1d-3
+
 
 / ! end of controls namelist

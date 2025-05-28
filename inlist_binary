@@ -11,7 +11,7 @@ pgbinary_flag                 = .true.
 
 m1                            = 20.0d0  ! donor mass in Msun
 m2                            = 15.0d0 ! companion mass in Msun
-initial_period_in_days        = 150d0
+initial_period_in_days        = 100d0
 
 !transfer efficiency controls
 limit_retention_by_mdot_edd   = .false.

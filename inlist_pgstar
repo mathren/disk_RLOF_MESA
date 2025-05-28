@@ -1,7 +1,7 @@
 &pgstar
 
 ! this updates the panels for each star but not the binary panel on the right, see inlist_pgbinary
-pgstar_interval                         = 1
+pgstar_interval                         = 10
 !pause                                  = .true.
 
 pgstar_age_disp                         = 2.5
@@ -30,12 +30,12 @@ Grid2_txt_scale_factor(1)               = 0.7 ! multiply txt_scale for subplot b
 
 Profile_Panels1_title                   = ''
 Profile_Panels1_num_panels              = 1
-Profile_Panels1_xaxis_name              = 'zone' ! 'mass' ! 'logtau'
+Profile_Panels1_xaxis_name              = 'mass' ! 'zone' ! ! 'logtau'
 Profile_Panels1_yaxis_name(1)           = 'omega' !'vel_km_per_s' ! 'opacity'
 Profile_Panels1_other_yaxis_name(1)     = 'logdq'!'v_div_csound' !'conv_L_div_L'
-Profile_Panels1_xaxis_reversed          = .true. ! .false.
-Profile_Panels1_dymin(1)                = 0.05
-Profile_Panels1_other_dymin(1)          = 0.01
+Profile_Panels1_xaxis_reversed          = .false. ! .false.
+! Profile_Panels1_dymin(1)                = 0.05
+! Profile_Panels1_other_dymin(1)          = 0.01
 
 
 !Profile_Panels1_other_yaxis_name(2)    = 'Y_mass_fraction_He'
