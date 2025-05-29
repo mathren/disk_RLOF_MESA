@@ -27,7 +27,7 @@ Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
 
 ** Input & outputs
 
-Input: $\dot{M}_1$, $\omega_{accretor, surf}$, $M_1$, $M_2$, $a$
+Input: $\dot{M}_1$, $\omega_{\rm accretor,surf}$, $M_1$, $M_2$, $a$
 
 Output: $\dot{M}_2$, $\dot{J}_2$
 
