@@ -15,7 +15,7 @@ Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
 - [[https://ui.adsabs.harvard.edu/abs/1991MNRAS.253...55C/abstract][Colpi et al. 1991]]
 - [[https://academic.oup.com/mnras/article/519/1/1409/6886566][Lu et al. 2022 (L2 mass loss)]]
 - [[https://ui.adsabs.harvard.edu/abs/1994PASJ...46..621I/abstract][Ichikawa & Osaki, 1994]]
-- [[https://academic.oup.com/mnras/article/181/3/441/988438[Papaloizou & Pringle 1977]]
+- [[https://academic.oup.com/mnras/article/181/3/441/988438][Papaloizou & Pringle 1977]]
 - [[https://ui.adsabs.harvard.edu/abs/1977ApJ...216..822P/abstract][Paczynski 1977]]
 
 * Initial discussion:
