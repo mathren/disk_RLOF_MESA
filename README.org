@@ -24,10 +24,12 @@ Using [[https://docs.mesastar.org/en/24.08.1/][MESA r24.08.1]].
 - L2 mass loss is energetically possible (cf.
   [[https://github.com/wenbinlu/L2massloss][L2 mass loss code]]), but can be added later
 - the important thing to implement are dot(M2) and dot(J2) through the boundary layers.
+
 ** Input & outputs
 
-Input: $\dot{M1}$, \omega_{accretor, surf}, M_{1}, M_{2}, a
-Output: $\dot{M2}$, $\dot{J_{}}_{2}$
+Input: $\dot{M}_1$, $\omega_{accretor, surf}$, $M_1$, $M_2$, $a$
+
+Output: $\dot{M}_2$, $\dot{J}_2$
 
 Routines to be used:
 - =mod_other_accreted_material_j.f90=
