@@ -248,6 +248,18 @@ if __name__ == "__main__":
     # X = 0.7  # hydrogen mass fraction
     # Z = 0.02  # metallicity
 
+    # print typical values
+    for mass_transfer_rate in [0.001, 0.0001]:
+        print(
+            calculate_L2_mass_loss_fraction(
+                donor_mass,
+                accretor_mass,
+                mass_transfer_rate,
+                2.0,
+                alpha,
+            )
+        )
+
     # Calculate grid of models
     a_vals = np.logspace(log_a_range[0], log_a_range[1], 100)
     M1dot_vals = np.logspace(log_M1dot_range[0], log_M1dot_range[1], 100)
