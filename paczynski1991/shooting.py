@@ -13,7 +13,7 @@ import pdb
 
 # Dimensionless free parameters (Paczynski+1991)
 a_inv = 0.1
-ω_s = 0.5
+ω_s = 1.#1.001
 
 n = 1.5  # polytropic index (n=3/2 is γ=5/3)
 
@@ -31,8 +31,9 @@ method = "Radau"
 # Define a function giving dZ / dx:
 def get_dZ_dx(x, Z, j_star):
     ω, y = Z
-    dω_dx = x ** (3.0 * n - 1.5) * (j_star - x**2 * ω) * a_inv / y ** (2.0 * n + 3.0)
-    dy_dx = (x**2 + y**2) ** 1.5 * x * ω**2 / y - 1
+    dω_dx = x ** (3. * n - 1.5) * (j_star - ω * x ** 2) * a_inv / y ** (2. * n + 3.)
+    # dω_dx = x ** 3 * (j_star - ω * x ** 2) * a_inv / y ** 6
+    dy_dx = ω ** 2 * (x ** 2 + y ** 2) ** 1.5 * x / y - x / y
     dZ_dx = np.array([dω_dx, dy_dx])
 
     return dZ_dx
@@ -49,10 +50,9 @@ def get_Z_in():
 
 def get_Z_out(j_star):
     # Fix ω and dω/dx to be Keplerian
-    ω_out = x_out**-1.5
-    y_out = (2.0 * (x_out**0.5 - j_star) * a_inv * x_out**2.5 / 3.0) ** (
-        1 / (2.0 * n + 3.0)
-    )
+    ω_out = x_out ** -1.5
+    y_out = (2. * a_inv / 3.) ** (1. / (2. * n + 3.)) * x_out ** ((6. * n + 3.) / (4. * n + 6.)) * (1 - j_star * x_out ** -0.5) ** (1. / (2. * n + 3.))
+    # y_out = (2. * a_inv / 3.) ** (1. / 6.) * x_out * (1 - j_star * x_out ** -0.5) ** (1. / 6.)
     Z_out = np.array([ω_out, y_out])
 
     return Z_out
