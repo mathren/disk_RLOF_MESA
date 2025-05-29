@@ -5,96 +5,96 @@ import os
 import shutil
 
 from sympy.codegen.ast import Assignment
+
 import pdb
 
-# compile and run with:
-# /usr/bin/clang++ -Wall -std=c++11 main.cpp diffeq.cpp -o main; ./main
-
 # Directory parameters
-dirname = '/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/relaxation_paczynski1991/'
+dirname = '/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/thirdbranch/'
 nr3dir = '/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/resources/'
+solvdedir = '/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/resources/'
 
-outdir = f'/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/relaxation_paczynski1991/output/'
+outdir = f'/Users/nrui/Desktop/supercriticalmt/disk_RLOF_MESA/paczynski1991/thirdbranch/output/'
+os.mkdir(dirname)
+os.mkdir(outdir)
+
+shutil.copy(f'{nr3dir}nr3.h', f'{dirname}nr3.h')
+shutil.copy(f'{solvdedir}solvde.h', f'{dirname}solvde.h')
 
 precision = 10
-thresh = 1e-3
+thresh = 1e-7
 
 # Solver parameters
-N_grid = 1001
+N_grid = 2001
 
 # Important symbol definitions
 x = sym.Symbol('x', real=True)
-x_min = 0.8
-x_max = 10.
+x_min = 0
+x_max = 1 - 1e-6
 
 dx = sym.Symbol('dx', real=True)
 xbar = sym.Symbol('xbar', real=True)
 
 # Iteration parameters
+a = sym.Symbol('a', real=True)
+m = sym.Symbol('m', real=True)
 n = sym.Symbol('n', real=True)
-omega_spin = sym.Symbol('omega_spin', real=True)
-a_inv = sym.Symbol('a_inv', real=True)
 
-paramlist = [a_inv, omega_spin, n]
-paramdict_type = {a_inv: 'Doub', omega_spin: 'Doub', n: 'Int'} # list: dtype, min, max, spacing
-paramdict_min = {a_inv: 1e6, omega_spin: 0.3, n: 1.5}
-paramdict_max = {a_inv: 2e6, omega_spin: 0.4, n: 1.5}
-paramdict_points = {a_inv: 2, omega_spin: 2, n: None}
+a_min = 1e-2
+
+paramlist = [a, m, n]
+paramdict_type = {a: 'Doub', m: 'Int', n: 'Int'} # list: dtype, min, max, spacing
+paramdict_min = {a: a_min, m: 5, n: 5}#'max(1,m)'}
+paramdict_max = {a: 4+a_min, m: 5, n: 5}
+paramdict_points = {a: 401, m: None, n: None}
 
 # Unknown functions to solve for
-y = sym.Function('y', real=True)
-omega = sym.Function('omega', real=True)
-j_star = sym.Function('j_star', real=True)
+Pr = sym.Function('Pr', real=True)
+Zr = sym.Function('Zr', real=True)
+b = sym.Function('b', real=True)
 
-Unknowns = [omega, y, j_star]
+Unknowns = [Pr, Zr, b]
+Unknowns_flat = {Pr: False, Zr: False, b: True} # if flat, means just write out the first item (since they're all the same)
 
-Unknowns_flat = {y: False, omega: False, j_star: True} # if flat, means just write out the first item (since they're all the same)
+eps = 1.e-8
+norm = 1. #f'(fmod(n+m, 2) * -1. * (assoc_legendre(n, m, {eps}) - assoc_legendre(n, m, -{eps})) / (2. * {eps}) + (1-fmod(n+m, 2)) * assoc_legendre(n, m, 0))'
 
-# Add initial guesses as strings # TODO
-Guesses = ['pow(x_grid[ii], -1.5)',
-           'pow(a_inv_ii / 1.5, 1./(2.*n+3.)) * pow(x_grid[ii], (6.*n+3.) / (4.*n+6.))',
-           '0.'] # initial guesses
+# Add initial guesses as strings
+# Guesses = [f'assoc_legendre(n, m, x_grid[ii]) / {norm}',
+#            f'-(1. - pow(x_grid[ii], 2.)) * (assoc_legendre(n, m, x_grid[ii] + {eps}) - assoc_legendre(n, m, x_grid[ii] - {eps})) / (2. * {eps} * {norm})',
+#            f'pow((Doub)n * ((Doub)n + 1.), 0.5) * {a_min}'] # initial guesses
+Guesses = [f'1.',
+           f'1.',
+           f'pow((Doub)n * ((Doub)n + 1.), 0.5) * {a_min}'] # initial guesses
 
 # Boundary conditions (as expressions which must vanish at the specified endpoint) - don't put derivatives into these
-Left1 = omega_spin - omega(x)
-Left2 = ((1 - 0.5 * omega_spin ** 2 * x_min ** 2) ** -2. - x_min ** 2) ** 0.5 - y(x)
+Left1 = sym.Mod(n+m, 2) * Pr(x) + (1 - sym.Mod(n+m, 2)) * Zr(x) # parity (real)
+Left2 = sym.Mod(n+m, 2) * Zr(x) + (1 - sym.Mod(n+m, 2)) * Pr(x) - 1 # normalization
 
 Boundary_left = [Left1, Left2]
 
-Right1 = x_max ** -1.5 - omega(x)
-# Right1 = omega_spin - omega(x) # TODO TEMP
+Right1 = Zr(x)
 
 Boundary_right = [Right1]
 
 # Equations, written as expressions which will be set to zero
-Equation1 = x ** (3. * n - 1.5) * (j_star(x) - omega(x) * x ** 2) * a_inv / y(x) ** (2. * n + 3.) - sym.diff(omega(x), x)
-Equation2 = omega(x) ** 2 * (x ** 2 + y(x) ** 2) ** 1.5 * x / y(x) - x / y(x) - sym.diff(y(x), x)
-Equation3 = sym.diff(j_star(x), x) # const. j_star
-# Equation1 = y(x) * x - sym.diff(omega(x), x) # TODO TEMP
-# Equation2 = j_star(x) * x - sym.diff(y(x), x) # TODO TEMP
-# Equation3 = sym.diff(j_star(x), x) # const. j_star # TODO TEMP
+Equation1 = sym.diff(Zr(x), x) - (b(x) ** 2 / a ** 2 - m ** 2 / ((1 - x ** 2) * (1 - b(x) ** 2 * x ** 2))) * Pr(x)
+Equation2 = sym.diff(Pr(x), x) + (1 - b(x) ** 2 * x ** 2) * Zr(x) / (1 - x ** 2)
+Equation3 = sym.diff(b(x), x)
 
 Equations = [Equation1, Equation2, Equation3]
 
 # "Bump parameters" - perturbing the initial guess each time
-bumps = [0, 0, 0]
+bumps = [0, 0.01, 0, 0.01, 0, 0]
 
 # Numerical Recipes parameters
 run_itmax = 10
 run_conv = 1.e-15
 run_slowc = 1.
-run_scalv = [1., 1., 1.]
+run_scalv = [100., 100., 100., 100., 10., 10.]
 
 #####################
 ### THE BLACK BOX ###
 #####################
-
-# Copy files
-os.mkdir(dirname)
-os.mkdir(outdir)
-
-shutil.copy(f'{nr3dir}nr3.h', f'{dirname}nr3.h')
-shutil.copy(f'{nr3dir}solvde.h', f'{dirname}solvde.h')
 
 # Discretize the LEFT boundary conditions and find the relevant derivatives
 s_matrix_assignments = []
@@ -348,6 +348,12 @@ text += f'{indent}\n'
 text += f'{indent}MatDoub y_vec({len(Unknowns)},N_grid);'
 text += f'{indent}\n'
 
+text += f'{indent}for (Int ii=0; ii<N_grid-1; ii++)' + ' {\n'
+for jj, guess in enumerate(Guesses):
+    text += f'{indent}    y_vec[{jj}][ii] = {guess};\n'
+text += f'{indent}' + '}\n'
+text += f'{indent}\n'
+
 for ii, param in enumerate(paramlist):
     if paramdict_type[param] == 'Doub':
         text += f'{indent}Int {param.name}_points = {paramdict_points[param]};\n'
@@ -411,17 +417,10 @@ for ii, param in enumerate(paramlist):
 text += 'x_grid);\n'
 text += f'{indent}\n'
 
-text += f'{indent}for (Int ii=0; ii<N_grid; ii++)' + ' {\n'
+text += f'{indent}for (Int ii=0; ii<N_grid-1; ii++)' + ' {\n'
 for jj, Unknown in enumerate(Unknowns):
     if bumps[jj] != 0:
-        text += f'{indent}    y_vec[{jj}][ii] = {bumps[jj]};\n'
-text += f'{indent}' + '}\n'
-text += f'{indent}\n'
-
-# INITIAL GUESSES (do in each loop)
-text += f'{indent}for (Int ii=0; ii<N_grid; ii++)' + ' {\n'
-for jj, guess in enumerate(Guesses):
-    text += f'{indent}    y_vec[{jj}][ii] = {guess};\n'
+        text += f'{indent}    y_vec[{jj}][ii] += {bumps[jj]};\n'
 text += f'{indent}' + '}\n'
 text += f'{indent}\n'
 
