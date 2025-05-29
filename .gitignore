@@ -18,3 +18,4 @@ binary
 png/*
 *.png
 .DS_Store
+main
