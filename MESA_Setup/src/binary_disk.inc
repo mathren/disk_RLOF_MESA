@@ -318,6 +318,7 @@ subroutine L2_mdot(binary_id, ierr)
      write(*,*) 'failed in binary_ptr'
      return
   end if
+  ! Note: this routine is called every timestep no matter what
   print *, "in adjust_mdots!"
 
   disk_alpha = 0.1d0
@@ -336,22 +337,22 @@ subroutine L2_mdot(binary_id, ierr)
      print *, "fL2 = ", fL2
   end if
 
-  b% fixed_xfer_fraction = 0d0
-  ! note that you should also eval mdot_edd here and the wind mass transfer eff
-  ! and angular momentum accretion. You can call the default functions using
-  ! the ones provided through binary_lib
-  b% mdot_edd = 0d0
-  b% mdot_edd_eta = 0d0
-  b% mdot_wind_transfer(:) = 0d0
-  b% wind_xfer_fraction(:) = 0d0
-  b% s_donor% mstar_dot = 0d0
-  if (b% point_mass_i == 0) then
-     b% component_mdot(b% a_i) = 0d0
-  else
-     b% s_accretor% mstar_dot = 0d0
-  end if
-  b% accretion_luminosity = 0d0
-  b% mdot_system_transfer(:) = 0d0
-  b% mdot_system_cct = 0d0
+  ! b% fixed_xfer_fraction = 0d0
+  ! ! note that you should also eval mdot_edd here and the wind mass transfer eff
+  ! ! and angular momentum accretion. You can call the default functions using
+  ! ! the ones provided through binary_lib
+  ! b% mdot_edd = 0d0
+  ! b% mdot_edd_eta = 0d0
+  ! b% mdot_wind_transfer(:) = 0d0
+  ! b% wind_xfer_fraction(:) = 0d0
+  ! b% s_donor% mstar_dot = 0d0
+  ! if (b% point_mass_i == 0) then
+  !    b% component_mdot(b% a_i) = 0d0
+  ! else
+  !    b% s_accretor% mstar_dot = 0d0
+  ! end if
+  ! b% accretion_luminosity = 0d0
+  ! b% mdot_system_transfer(:) = 0d0
+  ! b% mdot_system_cct = 0d0
 
 end subroutine L2_mdot
