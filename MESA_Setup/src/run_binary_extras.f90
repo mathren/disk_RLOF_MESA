@@ -144,6 +144,8 @@
             return
          end if
 
+         print *, "accretion mode", b% accretion_mode
+
       end function  extras_binary_start_step
 
       !Return either keep_going, retry or terminate

@@ -36,11 +36,11 @@ change_factor_fraction        = 0.8d0
 min_mdot_for_implicit         = 1d-10
 implicit_scheme_tiny_factor   = 1d-6
 ! report_rlo_solver_progress  = .true.
-do_tidal_sync                 = .true.
-do_j_accretion                = .false. ! if .true. use A.3.3 of de Mink et al. 2013, ApJ, 764, 166
+do_tidal_sync                 = .false.
+do_j_accretion                = .true. ! if .true. use A.3.3 of de Mink et al. 2013, ApJ, 764, 166
 ! be 100% sure MB is always off
 do_jdot_mb                    = .false.
-do_jdot_missing_wind          = .true.   ! probably needs to be turned off
+do_jdot_missing_wind          = .false.
 
 ! ! timestep controls
 varcontrol_case_a             = 1d-4
