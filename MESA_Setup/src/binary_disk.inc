@@ -318,6 +318,8 @@ subroutine L2_mdot(binary_id, ierr)
 
   print *, "initial mdot before L2 application", b% mtransfer_rate
 
+  ! TODO fix default pre-L2 mass loss behavior
+
   ! copy default MT first
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
@@ -347,7 +349,7 @@ subroutine L2_mdot(binary_id, ierr)
           disk_mu, &
           fL2, ierr)
      print *, "Lu et al. loss fraction fL2 = ", fL2
-     print *, "need to apply f2 to mdot"
+     print *, "need to apply f2 to mdot and jdot!"
   else
      ! direct impact
      b% accretion_mode = 1
@@ -374,7 +376,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
   mdot = b% mtransfer_rate ! g/s
-  print *, "mtransfer_rate is NOT correctly set here, needs to be done right in L2_mdot"
+  print *, "mtransfer_rate may NOT be correctly set here, needs to be done right in L2_mdot"
   print *, "mdot=", mdot, mdot/(Msun/secyer), "log10(mdot)=", log10(abs(mdot))
   print *, b% accretion_mode
 
@@ -385,7 +387,6 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      print *, "No AM accretion!"
      b% acc_am_div_kep_am = 0.0d0
   else
-     print *, "direct impact"
      ! direct impact
      min_r = get_min_r(binary_id)
      b% s_accretor% accreted_material_j = &
