@@ -21,6 +21,8 @@ limit_retention_by_mdot_edd   = .false.
 
 ! add custom routines
 use_other_accreted_material_j = .true.
+do_j_accretion                = .false. ! cannot be used together with use_other_accreted_material_j, reimplemented
+
 use_other_adjust_mdots        = .true.
 
 write_header_frequency        = 1
@@ -37,7 +39,6 @@ min_mdot_for_implicit         = 1d-10
 implicit_scheme_tiny_factor   = 1d-6
 ! report_rlo_solver_progress  = .true.
 do_tidal_sync                 = .false.
-do_j_accretion                = .true. ! if .true. use A.3.3 of de Mink et al. 2013, ApJ, 764, 166
 ! be 100% sure MB is always off
 do_jdot_mb                    = .false.
 do_jdot_missing_wind          = .false.
