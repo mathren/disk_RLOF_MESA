@@ -40,7 +40,7 @@ paramlist = [a_inv, omega_spin, n]
 paramdict_type = {a_inv: 'Doub', omega_spin: 'Doub', n: 'Doub'} # list: dtype, min, max, spacing
 paramdict_min = {a_inv: 1e-6, omega_spin: 0.3, n: 1.5}
 paramdict_max = {a_inv: 2e-6, omega_spin: 0.4, n: 1.5}
-paramdict_points = {a_inv: 2, omega_spin: 2, n: 1}
+paramdict_points = {a_inv: 2, omega_spin: 2, n: 2}
 
 # Unknown functions to solve for
 y = sym.Function('y', real=True)
@@ -53,7 +53,7 @@ Unknowns_flat = {y: False, omega: False, j_star: True} # if flat, means just wri
 
 # Add initial guesses as strings
 Guesses = ['pow(x_grid[ii], -1.5)',
-           'pow(a_inv_ii / 1.5, 1./(2.*n_ii+3.)) * pow(x_grid[ii], (6.*n_ii+3.) / (4.*n_ii+6.))',
+           'pow(a_inv_grid[a_inv_ii] / 1.5, 1./(2.*n_grid[n_ii]+3.)) * pow(x_grid[ii], (6.*n_grid[n_ii]+3.) / (4.*n_grid[n_ii]+6.))',
            '0.'] # initial guesses
 
 # Boundary conditions (as expressions which must vanish at the specified endpoint) - don't put derivatives into these
