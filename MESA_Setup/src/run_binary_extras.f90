@@ -76,7 +76,7 @@
         integer, intent(in) :: binary_id
         integer, intent(out) :: ierr
         print *, "TEST"
-      end subroutine disk_accreted_material_j
+      end subroutine test
 
       integer function how_many_extra_binary_history_header_items(binary_id)
          use binary_def, only: binary_info
