@@ -326,13 +326,13 @@ subroutine L2_mdot(binary_id, ierr)
 
   if (b% accretion_mode == 2) then
      print *, "call Lu+22 L2"
-     fL2 = eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-          b% s_accretor% m(1)/Msun, &
-          b% mtransfer_rate/(Msun/secyer), &
-          b% separation/Rsun, &
-          disk_alpha, &
-          disk_mu)
-
+     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+                                     b% s_accretor% m(1)/Msun, &
+                                     b% mtransfer_rate/(Msun/secyer), &
+                                     b% separation/Rsun, &
+                                     disk_alpha, &
+                                     disk_mu, &
+                                     fL2, ierr)
      print *, "fL2 = ", fL2
   end if
 
