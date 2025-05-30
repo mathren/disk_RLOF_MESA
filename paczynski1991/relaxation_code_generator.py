@@ -8,6 +8,7 @@ from sympy.codegen.ast import Assignment
 import pdb
 
 # compile and run with:
+# rm -r relaxation_paczynski1991; ipython relaxation_code_generator.py; cd relaxation_paczynski1991
 # /usr/bin/clang++ -Wall -std=c++11 main.cpp diffeq.cpp -o main; ./main
 
 # Directory parameters
@@ -36,10 +37,10 @@ omega_spin = sym.Symbol('omega_spin', real=True)
 a_inv = sym.Symbol('a_inv', real=True)
 
 paramlist = [a_inv, omega_spin, n]
-paramdict_type = {a_inv: 'Doub', omega_spin: 'Doub', n: 'Int'} # list: dtype, min, max, spacing
-paramdict_min = {a_inv: 1e6, omega_spin: 0.3, n: 1.5}
-paramdict_max = {a_inv: 2e6, omega_spin: 0.4, n: 1.5}
-paramdict_points = {a_inv: 2, omega_spin: 2, n: None}
+paramdict_type = {a_inv: 'Doub', omega_spin: 'Doub', n: 'Doub'} # list: dtype, min, max, spacing
+paramdict_min = {a_inv: 1e-6, omega_spin: 0.3, n: 1.5}
+paramdict_max = {a_inv: 2e-6, omega_spin: 0.4, n: 1.5}
+paramdict_points = {a_inv: 2, omega_spin: 2, n: 1}
 
 # Unknown functions to solve for
 y = sym.Function('y', real=True)
@@ -50,9 +51,9 @@ Unknowns = [omega, y, j_star]
 
 Unknowns_flat = {y: False, omega: False, j_star: True} # if flat, means just write out the first item (since they're all the same)
 
-# Add initial guesses as strings # TODO
+# Add initial guesses as strings
 Guesses = ['pow(x_grid[ii], -1.5)',
-           'pow(a_inv_ii / 1.5, 1./(2.*n+3.)) * pow(x_grid[ii], (6.*n+3.) / (4.*n+6.))',
+           'pow(a_inv_ii / 1.5, 1./(2.*n_ii+3.)) * pow(x_grid[ii], (6.*n_ii+3.) / (4.*n_ii+6.))',
            '0.'] # initial guesses
 
 # Boundary conditions (as expressions which must vanish at the specified endpoint) - don't put derivatives into these
@@ -180,6 +181,8 @@ for ii, Equation in enumerate(Equations):
     for jj, var in enumerate(Unknowns):
         var_upper = sym.Symbol(f'y[{jj}][k]')
         var_lower = sym.Symbol(f'y[{jj}][k-1]')
+        # var_upper = sym.Symbol(f'y[{jj}][k+1]')
+        # var_lower = sym.Symbol(f'y[{jj}][k]')
         
         vars_upper.append(var_upper)
         vars_lower.append(var_lower)
@@ -263,7 +266,9 @@ text += '\n'
 
 text += 'void Diffeq::smatrix(const Int k, const Int k1, const Int k2, const Int jsf, const Int is1, const Int isf, VecInt_I &indexv, MatDoub_O &s, MatDoub_I &y) {\n'
 text += '    dx = var_x_grid[k] - var_x_grid[k-1];\n'
-text += '    xbar = 0.5 * (var_x_grid[k] + var_x_grid[k-1]);\n'
+text += '    xbar = 0.5 * (var_x_grid[k] + var_x_grid[k-1]);\n' # TODO check
+# text += '    dx = var_x_grid[k+1] - var_x_grid[k];\n'
+# text += '    xbar = 0.5 * (var_x_grid[k+1] + var_x_grid[k]);\n'
 text += '    \n'
 
 text += '    if (k == k1) {\n'
@@ -475,7 +480,6 @@ for ii, param in enumerate(paramlist):
 
 text += '    \n'
 text += '    return 0;\n'
-
 text += '}\n'
 
 f = open(f'{dirname}main.cpp', 'w')
