@@ -129,8 +129,11 @@
             return
          end if
 
-!          b% s1% job% warn_run_star_extras = .false.
-          extras_binary_startup = keep_going
+         b% lxtra(1) = .false. ! flag for end of donor's main sequence
+         b% lxtra(2) = .false. ! flag for beginning RLOF
+         b% lxtra_old(2) = .false.
+
+         extras_binary_startup = keep_going
       end function  extras_binary_startup
 
       integer function extras_binary_start_step(binary_id,ierr)
@@ -173,6 +176,31 @@
             return
          end if
          extras_binary_finish_step = keep_going
+
+         ! find beginning RLOF
+         if ((b% lxtra(2) .eqv. .false.) .and. &
+              (b% lxtra_old(2) .eqv. .false.)) then
+            ! RLOF has not started before
+            if (b% rl_relative_gap(b% d_i) > 0) then
+               write(fname, fmt="(a20)") 'donor_onset_RLOF.mod'
+               call star_write_model(b% star_ids(1), fname, ierr)
+               write(fname, fmt="(a23)") 'accretor_onset_RLOF.mod'
+               call star_write_model(b% star_ids(2), fname, ierr)
+               print *, "Beginning of RLOF", b% lxtra(2), b% lxtra_old(2)
+               b% lxtra(2) = .true.
+               b% lxtra_old(2) = .true.
+            end if
+         end if
+
+         ! find donor's TAMS
+         if ((b% s_donor% xa(b% s_donor% net_iso(ih1), b% s_donor% nz) < 1d-4) .and. &
+              (b% lxtra(1) .eqv. .false.)) then
+            b% lxtra(1) =.true.
+            b% xtra(1) = b% s_donor% r(1)
+            print *, "saved donor radius at TAMS", b% xtra(1)
+            write(fname, fmt="(a14)") 'donor_TAMS.mod'
+            call star_write_model(b% star_ids(1), fname, ierr)
+         end if
 
       end function extras_binary_finish_step
 
