@@ -286,7 +286,7 @@ real(dp) function get_min_r(binary_id)
   call binary_ptr(binary_id, b, ierr)
   if (ierr /= 0) then
      write(*,*) 'failed in binary_ptr'
-     STOP
+     STOP "get_min_r can't get binary_pointer"
   end if
 
   ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
@@ -315,6 +315,8 @@ subroutine L2_mdot(binary_id, ierr)
      write(*,*) 'failed in binary_ptr'
      return
   end if
+
+  print *, "initial mdot before L2 application", b% mtransfer_rate
 
   ! copy default MT first
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
