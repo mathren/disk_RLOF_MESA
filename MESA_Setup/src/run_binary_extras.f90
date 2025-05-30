@@ -67,16 +67,10 @@
          b% warn_binary_extra =.false.
 
          ! point to function defined in binary_disk.inc
-         b% other_accreted_material_j => test !disk_accreted_material_j
          b% other_adjust_mdots => L2_mdot
+         b% other_accreted_material_j => disk_accreted_material_j
 
       end subroutine extras_binary_controls
-
-      subroutine test(binary_id, ierr)
-        integer, intent(in) :: binary_id
-        integer, intent(out) :: ierr
-        print *, "TEST"
-      end subroutine test
 
       integer function how_many_extra_binary_history_header_items(binary_id)
          use binary_def, only: binary_info

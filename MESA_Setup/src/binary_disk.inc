@@ -274,6 +274,62 @@ end function fL2_the
 
 ! ----------------------------------------------------------------------------------------------
 
+! other_adjust_mdots
+subroutine L2_mdot(binary_id, ierr)
+  use binary_def, only : binary_info, binary_ptr
+  use const_def, only: dp
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  real(dp) :: fL2, disk_alpha, disk_mu
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+  ! Note: this routine is called every timestep no matter what
+  print *, "in adjust_mdots!"
+
+  disk_alpha = 0.1d0
+  ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
+  disk_mu = 1.3d0/2.4d0
+
+  if (b% accretion_mode == 2) then
+     print *, "call Lu+22 L2"
+     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+                                     b% s_accretor% m(1)/Msun, &
+                                     b% mtransfer_rate/(Msun/secyer), &
+                                     b% separation/Rsun, &
+                                     disk_alpha, &
+                                     disk_mu, &
+                                     fL2, ierr)
+     print *, "fL2 = ", fL2
+  end if
+
+  call b% other_accreted_material_j(b% binary_id, ierr)
+
+  ! b% fixed_xfer_fraction = 0d0
+  ! ! note that you should also eval mdot_edd here and the wind mass transfer eff
+  ! ! and angular momentum accretion. You can call the default functions using
+  ! ! the ones provided through binary_lib
+  ! b% mdot_edd = 0d0
+  ! b% mdot_edd_eta = 0d0
+  ! b% mdot_wind_transfer(:) = 0d0
+  ! b% wind_xfer_fraction(:) = 0d0
+  ! b% s_donor% mstar_dot = 0d0
+  ! if (b% point_mass_i == 0) then
+  !    b% component_mdot(b% a_i) = 0d0
+  ! else
+  !    b% s_accretor% mstar_dot = 0d0
+  ! end if
+  ! b% accretion_luminosity = 0d0
+  ! b% mdot_system_transfer(:) = 0d0
+  ! b% mdot_system_cct = 0d0
+
+end subroutine L2_mdot
+
+
 ! other_accreted_material_j
 subroutine disk_accreted_material_j(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
@@ -318,56 +374,3 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
 end subroutine disk_accreted_material_j
-
-! other_adjust_mdots
-subroutine L2_mdot(binary_id, ierr)
-  use binary_def, only : binary_info, binary_ptr
-  use const_def, only: dp
-  integer, intent(in) :: binary_id
-  integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, disk_mu
-  type (binary_info), pointer :: b
-  ierr = 0
-  call binary_ptr(binary_id, b, ierr)
-  if (ierr /= 0) then
-     write(*,*) 'failed in binary_ptr'
-     return
-  end if
-  ! Note: this routine is called every timestep no matter what
-  print *, "in adjust_mdots!"
-
-  disk_alpha = 0.1d0
-  ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
-  disk_mu = 1.3d0/2.4d0
-
-  if (b% accretion_mode == 2) then
-     print *, "call Lu+22 L2"
-     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-                                     b% s_accretor% m(1)/Msun, &
-                                     b% mtransfer_rate/(Msun/secyer), &
-                                     b% separation/Rsun, &
-                                     disk_alpha, &
-                                     disk_mu, &
-                                     fL2, ierr)
-     print *, "fL2 = ", fL2
-  end if
-
-  ! b% fixed_xfer_fraction = 0d0
-  ! ! note that you should also eval mdot_edd here and the wind mass transfer eff
-  ! ! and angular momentum accretion. You can call the default functions using
-  ! ! the ones provided through binary_lib
-  ! b% mdot_edd = 0d0
-  ! b% mdot_edd_eta = 0d0
-  ! b% mdot_wind_transfer(:) = 0d0
-  ! b% wind_xfer_fraction(:) = 0d0
-  ! b% s_donor% mstar_dot = 0d0
-  ! if (b% point_mass_i == 0) then
-  !    b% component_mdot(b% a_i) = 0d0
-  ! else
-  !    b% s_accretor% mstar_dot = 0d0
-  ! end if
-  ! b% accretion_luminosity = 0d0
-  ! b% mdot_system_transfer(:) = 0d0
-  ! b% mdot_system_cct = 0d0
-
-end subroutine L2_mdot
