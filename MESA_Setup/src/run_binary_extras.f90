@@ -66,46 +66,10 @@
          ! to disable the printed warning message,
          b% warn_binary_extra =.false.
 
-         ! b% other_rlo_mdot => disk_rlo_mdot
+         ! point to function defined in binary_disk.inc
          b% other_accreted_material_j => disk_accreted_material_j
 
       end subroutine extras_binary_controls
-
-      ! No need to modify how the donor loses mass
-      ! subroutine disk_rlo_mdot(binary_id, mdot, ierr)
-      !    use binary_def, only : binary_info, binary_ptr
-      !    use const_def, only: dp
-      !    integer, intent(in) :: binary_id
-      !    real(dp), intent(out) :: mdot
-      !    integer, intent(out) :: ierr
-      !    type (binary_info), pointer :: b
-      !    ierr = 0
-      !    call binary_ptr(binary_id, b, ierr)
-      !    if (ierr /= 0) then
-      !       write(*,*) 'failed in binary_ptr'
-      !       return
-      !    end if
-      !    print *, "in disk rlo"
-      !    mdot = 0d0
-      ! end subroutine disk_rlo_mdot
-
-      subroutine disk_accreted_material_j(binary_id, ierr)
-         use binary_def, only : binary_info, binary_ptr
-         use const_def, only: dp
-         integer, intent(in) :: binary_id
-         integer, intent(out) :: ierr
-         type (binary_info), pointer :: b
-         ierr = 0
-         call binary_ptr(binary_id, b, ierr)
-         if (ierr /= 0) then
-            write(*,*) 'failed in binary_ptr'
-            return
-         end if
-         b% accretion_mode = 0
-         b% acc_am_div_kep_am = 0.0d0
-         print *, "in disk accreted j"
-      end subroutine disk_accreted_material_j
-
 
       integer function how_many_extra_binary_history_header_items(binary_id)
          use binary_def, only: binary_info
