@@ -73,7 +73,7 @@ Ftid_2                        = 1
 do_initial_orbit_sync_1       = .true.
 do_initial_orbit_sync_2       = .true.
 
-accretor_overflow_terminate   = 2d0
+! accretor_overflow_terminate   = 2d0
 
 photo_interval                = 200
 !photo_digits                 = 8
