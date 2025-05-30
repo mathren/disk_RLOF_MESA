@@ -33,6 +33,9 @@
 
       contains
 
+      ! include custom functions for Paczynski 1991
+      include 'binary_disk.inc'
+
       subroutine extras_binary_controls(binary_id, ierr)
          integer :: binary_id
          integer, intent(out) :: ierr
