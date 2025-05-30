@@ -1,0 +1,9 @@
+*.data
+*.dat
+profiles.list
+*.mod
+*.o
+*.a
+*.smod
+photos/*
+LOGS*/*
