@@ -310,6 +310,7 @@ subroutine L2_mdot(binary_id, ierr)
   use const_def, only: dp
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
+  real(dp) :: fL2, disk_alpha, disk_mu
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -318,6 +319,21 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
   print *, "in adjust_mdots!"
+  print *, "call Lu+22 L2"
+
+  disk_alpha = 0.1d0
+  ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
+  disk_mu = 1.3d0/2.4d0
+
+  fL2 = eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+       b% s_accretor% m(1)/Msun, &
+       b% mtransfer_rate/(Msun/secyer), &
+       b% separation/Rsun, &
+       disk_alpha, &
+       disk_mu)
+
+  print *, "fL2 = ", fL2
+
   b% fixed_xfer_fraction = 0d0
   ! note that you should also eval mdot_edd here and the wind mass transfer eff
   ! and angular momentum accretion. You can call the default functions using
