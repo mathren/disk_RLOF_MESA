@@ -40,6 +40,7 @@ Solvde<R>::Solvde(const Int itmaxx, const Doub convv, const Doub slowcc,
 	Int j1=0,j2=nb,j3=nb,j4=ne,j5=j4+j1,j6=j4+j2,j7=j4+j3,j8=j4+j4,j9=j8+j1;
 	Int ic1=0,ic2=ne-nb,ic3=ic2,ic4=ne,jc1=0,jcf=ic3;
 	for (Int it=0;it<itmax;it++) {
+		// std::cout << "hello" << endl;
 		k=k1;
 		difeq.smatrix(k,k1,k2,j9,ic3,ic4,indexv,s,y);
 		pinvs(ic3,ic4,j5,j9,jc1,k1);

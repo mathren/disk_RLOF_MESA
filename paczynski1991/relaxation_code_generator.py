@@ -7,6 +7,10 @@ import shutil
 from sympy.codegen.ast import Assignment
 import pdb
 
+# TODO
+# - output.txt being written to wrong place
+# - fix n=3/2 explicitly, to not deal with garbage
+
 # compile and run with:
 # rm -r relaxation_paczynski1991; ipython relaxation_code_generator.py; cd relaxation_paczynski1991
 # /usr/bin/clang++ -Wall -std=c++11 main.cpp diffeq.cpp -o main; ./main
@@ -62,8 +66,9 @@ Left2 = ((1 - 0.5 * omega_spin ** 2 * x_min ** 2) ** -2. - x_min ** 2) ** 0.5 - 
 
 Boundary_left = [Left1, Left2]
 
-Right1 = x_max ** -1.5 - omega(x)
+# Right1 = x_max ** -1.5 - omega(x)
 # Right1 = omega_spin - omega(x) # TODO TEMP
+Right1 = (1e-6 / 1.5) ** (1./6.) * x - y(x)
 
 Boundary_right = [Right1]
 
