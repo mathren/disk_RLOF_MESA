@@ -148,7 +148,7 @@
          end if
 
          print *, "accretion mode", b% accretion_mode
-
+         print *, "use other j", b% use_other_accreted_material_j
       end function  extras_binary_start_step
 
       !Return either keep_going, retry or terminate
