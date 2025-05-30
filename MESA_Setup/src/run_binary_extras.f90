@@ -216,4 +216,51 @@
 
       end subroutine extras_binary_after_evolve
 
+
+! other_accreted_material_j
+subroutine disk_accreted_material_j(binary_id, ierr)
+  use binary_def, only : binary_info, binary_ptr
+  use const_def, only: dp, standard_cgrav
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  real(dp) :: mdot ! mass lost to RLOF by the donor
+  real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+
+  mdot = b% mtransfer_rate ! g/s
+  print *, "in disk accreted j"
+  print *, "mdot=", mdot/(Msun/secyer)
+
+  ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
+  ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
+
+  qratio = b% m(b% a_i) / b% m(b% d_i)
+  qratio = min(max(qratio,0.0667d0),15d0)
+  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
+  print *, "min_r", min_r/Rsun
+
+  if (b% r(b% a_i) < min_r) then
+     b% accretion_mode = 2 ! means there is a disk
+     print *, "There is a disk!"
+     ! TODO: implement once we have mdot(jdot) relation from
+     ! Paczinsky's 1991 paper
+     print *, "No AM accretion!"
+     b% acc_am_div_kep_am = 0.0d0
+  else
+     b% accretion_mode = 1
+     b% s_accretor% accreted_material_j = &
+          sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
+     b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
+          sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
+  end if
+
+end subroutine disk_accreted_material_j
+
+
       end module run_binary_extras
