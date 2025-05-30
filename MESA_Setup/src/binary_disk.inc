@@ -273,6 +273,32 @@ real(dp) function fL2_the(the, c1, c2, PhiL2, PhiRd, GM2, Rd)
 end function fL2_the
 
 ! ----------------------------------------------------------------------------------------------
+! helper functions
+
+real(dp) function get_min_r(binary_id)
+  integer, intent(in) :: binary_id
+  integer :: ierr
+  type(binary_info), pointer :: b
+  real(dp) :: min_r
+  real(dp) :: qratio
+  ierr = 0
+  min_r = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     STOP
+  end if
+
+  ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
+  ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
+  qratio = b% m(b% a_i) / b% m(b% d_i)
+  qratio = min(max(qratio,0.0667d0),15d0)
+  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
+
+end function get_min_r
+! ----------------------------------------------------------------------------------------------
+! The magic happens down here
+
 
 ! other_adjust_mdots
 subroutine L2_mdot(binary_id, ierr)
@@ -346,8 +372,8 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
   mdot = b% mtransfer_rate ! g/s
-  print *, "in disk accreted j"
-  print *, "mdot=", mdot/(Msun/secyer)
+  print *, "mtransfer_rate is NOT correctly set here, needs to be done right in L2_mdot"
+  print *, "mdot=", mdot, mdot/(Msun/secyer), "log10(mdot)=", log10(abs(mdot))
   print *, b% accretion_mode
 
   if (b% accretion_mode == 2) then
@@ -357,6 +383,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      print *, "No AM accretion!"
      b% acc_am_div_kep_am = 0.0d0
   else
+     print *, "direct impact"
      ! direct impact
      min_r = get_min_r(binary_id)
      b% s_accretor% accreted_material_j = &
@@ -366,25 +393,3 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
 end subroutine disk_accreted_material_j
-
-real(dp) function get_min_r(binary_id)
-  integer, intent(in) :: binary_id
-  integer :: ierr
-  type(binary_info), pointer :: b
-  real(dp) :: min_r
-  real(dp) :: qratio
-  ierr = 0
-  min_r = 0
-  call binary_ptr(binary_id, b, ierr)
-  if (ierr /= 0) then
-     write(*,*) 'failed in binary_ptr'
-     STOP
-  end if
-
-  ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
-  ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
-  qratio = b% m(b% a_i) / b% m(b% d_i)
-  qratio = min(max(qratio,0.0667d0),15d0)
-  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
-
-end function get_min_r
