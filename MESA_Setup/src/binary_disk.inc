@@ -386,5 +386,5 @@ real(dp) function get_min_r(binary_id)
   qratio = b% m(b% a_i) / b% m(b% d_i)
   qratio = min(max(qratio,0.0667d0),15d0)
   min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
-  print *, "min_r", min_r/Rsun
+
 end function get_min_r
