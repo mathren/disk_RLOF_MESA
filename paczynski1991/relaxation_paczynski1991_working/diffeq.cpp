@@ -5,7 +5,7 @@
 
 using namespace std;
 
-Diffeq::Diffeq(const Doub &in_a_inv, const Doub &in_omega_spin, const Int &in_n, const VecDoub in_x_grid) {
+Diffeq::Diffeq(const Doub &in_a_inv, const Doub &in_omega_spin, const Doub &in_n, const VecDoub in_x_grid) {
     var_a_inv = in_a_inv;
     var_omega_spin = in_omega_spin;
     var_n = in_n;
