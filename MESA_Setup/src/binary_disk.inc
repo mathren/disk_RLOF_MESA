@@ -292,9 +292,10 @@ real(dp) function get_min_r(binary_id)
   ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
   ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
   qratio = b% m(b% a_i) / b% m(b% d_i)
+  print *, "qratio", qratio
   qratio = min(max(qratio,0.0667d0),15d0)
-  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
-
+  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0) ! same units as separation, cm
+  print *, "min_r", min_r, "separation", b% separation
 end function get_min_r
 ! ----------------------------------------------------------------------------------------------
 ! The magic happens down here
@@ -334,6 +335,7 @@ subroutine L2_mdot(binary_id, ierr)
        b% mdot_wind_transfer(b% a_i)
 
   min_r = get_min_r(binary_id)
+  print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
 
   if (b% r(b% a_i) < min_r) then
      b% accretion_mode = 2 ! means there is a disk
@@ -376,9 +378,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
   mdot = b% mtransfer_rate ! g/s
-  print *, "mtransfer_rate may NOT be correctly set here, needs to be done right in L2_mdot"
-  print *, "mdot=", mdot, mdot/(Msun/secyer), "log10(mdot)=", log10(abs(mdot))
-  print *, b% accretion_mode
+  print *, "log10(mdot/(Msun/yr))=", log10(abs(mdot/(Msun/secyer)))
 
   if (b% accretion_mode == 2) then
      ! disk is present
