@@ -12,11 +12,11 @@ pgbinary_grid_title_disp            = 0.2
 pgbinary_title_disp                 = 0.2
 
 
-Orbit_win_flag                      = .true.
+Orbit_win_flag                      = .false.
 Orbit_win_width                     = 8
 
 
-Grid1_win_flag                      = .true.
+Grid1_win_flag                      = .false.
 
 Grid1_win_width                     = 13
 Grid1_win_aspect_ratio              = 0.58

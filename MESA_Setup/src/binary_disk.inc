@@ -275,11 +275,10 @@ end function fL2_the
 ! ----------------------------------------------------------------------------------------------
 ! helper functions
 
-real(dp) function get_min_r(binary_id)
+real(dp) function get_min_r(binary_id) result(min_r)
   integer, intent(in) :: binary_id
   integer :: ierr
   type(binary_info), pointer :: b
-  real(dp) :: min_r
   real(dp) :: qratio
   ierr = 0
   min_r = 0
