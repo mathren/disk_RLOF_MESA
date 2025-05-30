@@ -19,9 +19,9 @@ initial_period_in_days        = 100d0
 !transfer efficiency controls
 limit_retention_by_mdot_edd   = .false.
 
-max_tries_to_achieve          = 20
+! add custom routines
 use_other_accreted_material_j = .true.
-! use_other_rlo_mdot          = .false.
+use_other_adjust_mdots        = .true.
 
 write_header_frequency        = 1
 limit_retention_by_mdot_edd   = .false. ! this is for BH secondaries

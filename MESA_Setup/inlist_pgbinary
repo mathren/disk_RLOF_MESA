@@ -1,6 +1,6 @@
 &pgbinary
 ! this only updates the right panel for the binary, not the star panels
-pgbinary_interval = 10
+pgbinary_interval                   = 20
 !pause                              = .true.
 
 pgbinary_age_disp                   = 1.7
