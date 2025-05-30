@@ -300,6 +300,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   qratio = b% m(b% a_i) / b% m(b% d_i)
   qratio = min(max(qratio,0.0667d0),15d0)
   min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
+  print *, "min_r", min_r/Rsun
 
   if (b% r(b% a_i) < min_r) then
      b% accretion_mode = 2 ! means there is a disk

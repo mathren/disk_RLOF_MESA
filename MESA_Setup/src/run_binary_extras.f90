@@ -187,7 +187,6 @@
                call star_write_model(b% star_ids(1), fname, ierr)
                write(fname, fmt="(a23)") 'accretor_onset_RLOF.mod'
                call star_write_model(b% star_ids(2), fname, ierr)
-               print *, "Beginning of RLOF", b% lxtra(2), b% lxtra_old(2)
                b% lxtra(2) = .true.
                b% lxtra_old(2) = .true.
             end if
