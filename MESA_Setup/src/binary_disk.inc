@@ -303,3 +303,37 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
 end subroutine disk_accreted_material_j
+
+
+subroutine L2_mdot(binary_id, ierr)
+  use binary_def, only : binary_info, binary_ptr
+  use const_def, only: dp
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+  print *, "in adjust_mdots!"
+  b% fixed_xfer_fraction = 0d0
+  ! note that you should also eval mdot_edd here and the wind mass transfer eff
+  ! and angular momentum accretion. You can call the default functions using
+  ! the ones provided through binary_lib
+  b% mdot_edd = 0d0
+  b% mdot_edd_eta = 0d0
+  b% mdot_wind_transfer(:) = 0d0
+  b% wind_xfer_fraction(:) = 0d0
+  b% s_donor% mstar_dot = 0d0
+  if (b% point_mass_i == 0) then
+     b% component_mdot(b% a_i) = 0d0
+  else
+     b% s_accretor% mstar_dot = 0d0
+  end if
+  b% accretion_luminosity = 0d0
+  b% mdot_system_transfer(:) = 0d0
+  b% mdot_system_cct = 0d0
+
+end subroutine L2_mdot
