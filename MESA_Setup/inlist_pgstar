@@ -341,10 +341,10 @@ Abundance_file_aspect_ratio = -1 ! negative means use same value as for window
 TRho_txt_scale = 0.7
 TRho_title = ''
 
-TRho_logT_min = 8.8d0
-TRho_logT_max = 10.2d0
-TRho_logRho_min = 5d0
-TRho_logRho_max = 10d0
+! TRho_logT_min = 8.8d0
+! TRho_logT_max = 10.2d0
+! TRho_logRho_min = 5d0
+! TRho_logRho_max = 10d0
 show_TRho_degeneracy_line = .true.
 
 
