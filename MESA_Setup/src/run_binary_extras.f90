@@ -212,8 +212,6 @@
          if (ierr /= 0) then ! failure in  binary_ptr
             return
          end if
-
-
       end subroutine extras_binary_after_evolve
 
       end module run_binary_extras

@@ -277,7 +277,8 @@ end function fL2_the
 ! other_adjust_mdots
 subroutine L2_mdot(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
-  use const_def, only: dp
+  use const_def, only: dp,  standard_cgrav
+  real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
   real(dp) :: fL2, disk_alpha, disk_mu
@@ -288,56 +289,54 @@ subroutine L2_mdot(binary_id, ierr)
      write(*,*) 'failed in binary_ptr'
      return
   end if
-  ! Note: this routine is called every timestep no matter what
-  print *, "in adjust_mdots!"
 
-  disk_alpha = 0.1d0
-  ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
-  disk_mu = 1.3d0/2.4d0
+  ! copy default MT first
+  b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
+       b% mass_transfer_delta
+  ! turn off Eddington limit for non-compact objects
+  b% mdot_edd = 0.0d0
+  b% mdot_edd_eta = 0d0
+  ! turn off wind mass transfer
+  b% mdot_wind_transfer(b% a_i) = 0d0
+  b% mdot_wind_transfer(b% d_i) = 0d0
+  ! set donor mass loss rate
+  b% s_donor% mstar_dot = b% s_donor% mstar_dot + b% mtransfer_rate - &
+       b% mdot_wind_transfer(b% a_i)
 
-  if (b% accretion_mode == 2) then
-     print *, "call Lu+22 L2"
+  min_r = get_min_r(binary_id)
+
+  if (b% r(b% a_i) < min_r) then
+     b% accretion_mode = 2 ! means there is a disk
+     print *, "There is a disk!"
+     disk_alpha = 0.1d0
+     ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
+     disk_mu = 1.3d0/2.4d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-                                     b% s_accretor% m(1)/Msun, &
-                                     b% mtransfer_rate/(Msun/secyer), &
-                                     b% separation/Rsun, &
-                                     disk_alpha, &
-                                     disk_mu, &
-                                     fL2, ierr)
-     print *, "fL2 = ", fL2
+          b% s_accretor% m(1)/Msun, &
+          b% mtransfer_rate/(Msun/secyer), &
+          b% separation/Rsun, &
+          disk_alpha, &
+          disk_mu, &
+          fL2, ierr)
+     print *, "Lu et al. loss fraction fL2 = ", fL2
+     print *, "need to apply f2 to mdot"
+  else
+     ! direct impact
+     b% accretion_mode = 1
   end if
 
+  ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
-
-  ! b% fixed_xfer_fraction = 0d0
-  ! ! note that you should also eval mdot_edd here and the wind mass transfer eff
-  ! ! and angular momentum accretion. You can call the default functions using
-  ! ! the ones provided through binary_lib
-  ! b% mdot_edd = 0d0
-  ! b% mdot_edd_eta = 0d0
-  ! b% mdot_wind_transfer(:) = 0d0
-  ! b% wind_xfer_fraction(:) = 0d0
-  ! b% s_donor% mstar_dot = 0d0
-  ! if (b% point_mass_i == 0) then
-  !    b% component_mdot(b% a_i) = 0d0
-  ! else
-  !    b% s_accretor% mstar_dot = 0d0
-  ! end if
-  ! b% accretion_luminosity = 0d0
-  ! b% mdot_system_transfer(:) = 0d0
-  ! b% mdot_system_cct = 0d0
-
 end subroutine L2_mdot
 
 
 ! other_accreted_material_j
 subroutine disk_accreted_material_j(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
-  use const_def, only: dp, standard_cgrav
+  use const_def, only: dp
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: mdot ! mass lost to RLOF by the donor
-  real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
+  real(dp) :: mdot, min_r ! mass lost to RLOF by the donor
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -349,24 +348,17 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   mdot = b% mtransfer_rate ! g/s
   print *, "in disk accreted j"
   print *, "mdot=", mdot/(Msun/secyer)
+  print *, b% accretion_mode
 
-  ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
-  ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
-
-  qratio = b% m(b% a_i) / b% m(b% d_i)
-  qratio = min(max(qratio,0.0667d0),15d0)
-  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
-  print *, "min_r", min_r/Rsun
-
-  if (b% r(b% a_i) < min_r) then
-     b% accretion_mode = 2 ! means there is a disk
-     print *, "There is a disk!"
+  if (b% accretion_mode == 2) then
+     ! disk is present
      ! TODO: implement once we have mdot(jdot) relation from
      ! Paczinsky's 1991 paper
      print *, "No AM accretion!"
      b% acc_am_div_kep_am = 0.0d0
   else
-     b% accretion_mode = 1
+     ! direct impact
+     min_r = get_min_r(binary_id)
      b% s_accretor% accreted_material_j = &
           sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
      b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
@@ -374,3 +366,25 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
 end subroutine disk_accreted_material_j
+
+real(dp) function get_min_r(binary_id)
+  integer, intent(in) :: binary_id
+  integer :: ierr
+  type(binary_info), pointer :: b
+  real(dp) :: min_r
+  real(dp) :: qratio
+  ierr = 0
+  min_r = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     STOP
+  end if
+
+  ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
+  ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
+  qratio = b% m(b% a_i) / b% m(b% d_i)
+  qratio = min(max(qratio,0.0667d0),15d0)
+  min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0)
+  print *, "min_r", min_r/Rsun
+end function get_min_r
