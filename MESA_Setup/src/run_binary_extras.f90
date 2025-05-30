@@ -69,6 +69,7 @@
          ! point to function defined in binary_disk.inc
          b% other_accreted_material_j => disk_accreted_material_j
          b% other_adjust_mdots => L2_mdot
+
       end subroutine extras_binary_controls
 
       integer function how_many_extra_binary_history_header_items(binary_id)
