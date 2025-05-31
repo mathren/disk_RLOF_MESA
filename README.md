@@ -26,7 +26,10 @@ L2 mass loss from Lu et al. 2022)
 -   [Ichikawa & Osaki, 1994](https://ui.adsabs.harvard.edu/abs/1994PASJ...46..621I/abstract)
 -   [Papaloizou & Pringle 1977](https://academic.oup.com/mnras/article/181/3/441/988438)
 -   [Paczynski 1977](https://ui.adsabs.harvard.edu/abs/1977ApJ...216..822P/abstract)
-
+-   [Wave mediated angular momentum transport in astrophysical boundary layers](https://www.aanda.org/articles/aa/full_html/2015/07/aa26005-15/aa26005-15.html)
+-   [On the terminal spins of accreting stars and planets: boundary layers](https://academic.oup.com/mnras/article/508/2/1842/6373455)
+-   [The Effects of Cooling on Boundary Layer Accretion](https://arxiv.org/abs/2405.20367v1)
+-   [Radiation hydrodynamics of the boundary layer in accretion disks. I - Numerical methods](https://ui.adsabs.harvard.edu/abs/1989A%26A...208...98K/abstract)
 
 # Initial discussion:
 
