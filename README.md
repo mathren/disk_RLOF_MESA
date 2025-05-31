@@ -30,6 +30,7 @@ L2 mass loss from Lu et al. 2022)
 -   [On the terminal spins of accreting stars and planets: boundary layers](https://academic.oup.com/mnras/article/508/2/1842/6373455)
 -   [The Effects of Cooling on Boundary Layer Accretion](https://arxiv.org/abs/2405.20367v1)
 -   [Radiation hydrodynamics of the boundary layer in accretion disks. I - Numerical methods](https://ui.adsabs.harvard.edu/abs/1989A%26A...208...98K/abstract)
+-   [Staristin 2022](https://ui.adsabs.harvard.edu/abs/2022RAA....22j5015S/abstract)
 
 # Initial discussion:
 
