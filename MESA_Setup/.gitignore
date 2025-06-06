@@ -1,9 +1,10 @@
 *.data
 *.dat
-profiles.list
 *.mod
 *.o
 *.a
 *.smod
 photos/*
 LOGS*/*
+restart_photo
+.restart_photo

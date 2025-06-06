@@ -295,9 +295,108 @@ real(dp) function get_min_r(binary_id) result(min_r)
   min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0) ! same units as separation, cm
 end function get_min_r
 
+! this is copied from $MESA_DIR/binary/private/binary_wind.f90
+subroutine eval_wind_xfer_fractions(binary_id, ierr)
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+
+  ! for the primary
+  if (b% point_mass_i /= 1) then
+     if (.not. b% do_wind_mass_transfer_1 .or. b% model_twins_flag) then
+        b% wind_xfer_fraction(1) = 0d0
+     else if(.not. b% use_other_binary_wind_transfer) then
+        call Bondi_Hoyle_wind_transfer(b% binary_id, 1, ierr)
+        if (ierr /=0) then
+           write(*,*) "Error in Bondi_Hoyle_wind_transfer(b% binary_id, 1, ierr)"
+           return
+        end if
+     else
+        call b% other_binary_wind_transfer(b% binary_id, 1, ierr)
+        if (ierr /=0) then
+           write(*,*) "Error in other_binary_wind_transfer(b% binary_id, 1, ierr)"
+           return
+        end if
+     end if
+  end if
+
+  ! check if secondary needs wind transfer
+  if (b% point_mass_i /= 2) then
+     if (.not. b% do_wind_mass_transfer_2) then
+        b% wind_xfer_fraction(2) = 0d0
+     else if(.not. b% use_other_binary_wind_transfer) then
+        call Bondi_Hoyle_wind_transfer(b% binary_id, 2, ierr)
+        if (ierr /=0) then
+           write(*,*) "Error in Bondi_Hoyle_wind_transfer(b% binary_id, 2, ierr)"
+           return
+        end if
+     else
+        call b% other_binary_wind_transfer(b% binary_id, 2, ierr)
+        if (ierr /=0) then
+           write(*,*) "Error in other_binary_wind_transfer(b% binary_id, 2, ierr)"
+           return
+        end if
+     end if
+  end if
+
+end subroutine eval_wind_xfer_fractions
+
+! this is copied from $MESA_DIR/binary/private/binary_wind.f90
+subroutine Bondi_Hoyle_wind_transfer(binary_id, s_i, ierr)
+  integer, intent(in) :: binary_id, s_i ! s_i is index of the wind mass losing star
+  integer, intent(out) :: ierr
+
+  ! wind transfer fraction based on Bondi-Hoyle mechanism as described in
+  ! Hurley et al. 2002, MNRAS, 329, 897-928
+
+  type(binary_info), pointer :: b
+  type (star_info), pointer :: s
+  real(dp) :: v_orb, v_wind
+  real(dp) :: alpha, beta  ! Bondi-Hoyle alpha, beta for that star
+  real(dp) :: max_xfer  ! Maximum transfer fraction
+
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+
+  if (s_i == 1) then
+     s => b% s1
+     alpha = b% wind_BH_alpha_1
+     beta = b% wind_BH_beta_1
+     max_xfer = b% max_wind_transfer_fraction_1
+  else
+     s => b% s2
+     alpha = b% wind_BH_alpha_2
+     beta = b% wind_BH_beta_2
+     max_xfer = b% max_wind_transfer_fraction_2
+  end if
+
+  ! orbital speed Hurley et al 2002 eq. 8
+  v_orb = sqrt(standard_cgrav * (b% m(1) + b% m(2)) / b% separation) !cm/s
+
+  ! windspeed from Hurley et al 2002 eq. 9
+  v_wind = sqrt(2d0 * beta *  standard_cgrav * b% m(s_i) / b% r(s_i))
+
+  ! Bondi-Hoyle transfer fraction Hurley et al. 2002 eq. 6
+  b% wind_xfer_fraction(s_i) = alpha / pow2(b% separation) /&
+       (2d0 * sqrt(1d0 - pow2(b% eccentricity))) *&
+       pow2(standard_cgrav * b% m(3-s_i) / pow2(v_wind)) *&
+       pow(1d0 + pow2(v_orb/v_wind),-1.5d0)
+
+  ! limit to provided maximum
+  b% wind_xfer_fraction(s_i) = min(max_xfer, b% wind_xfer_fraction(s_i))
+
+end subroutine Bondi_Hoyle_wind_transfer
 ! ----------------------------------------------------------------------------------------------
 ! The magic happens down here
-
 
 ! other_adjust_mdots
 subroutine L2_mdot(binary_id, ierr)
@@ -316,16 +415,23 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
 
+  if (b% point_mass_i /= 0) then
+     STOP "not for point masses!"
+  end if
+
   if (b% rl_relative_gap(b% d_i) < 0) then
      ! no RLOF ongoing
      return
   end if
 
   print *, "initial mdot before L2 application", b% mtransfer_rate
+  ! initialize
+  actual_mtransfer_rate = 0d0
 
-  ! copy default MT first
+
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
+
   ! turn off Eddington limit for non-compact objects
   b% mdot_edd = 0.0d0
   b% mdot_edd_eta = 0d0
@@ -333,19 +439,17 @@ subroutine L2_mdot(binary_id, ierr)
   ! b% mdot_wind_transfer(b% d_i) is a negative number that gives the
   ! amount of mass transferred by unit time from the donor to the
   ! accretor.
-  ! call eval_wind_xfer_fractions(b% binary_id, ierr)
-  ! if (ierr/=0) then
-  !    write(*,*) "Error in eval_wind_xfer_fractions"
-  !    return
-  ! end if
-  ! ! remove wind fractions
-  ! b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
-  !      b% wind_xfer_fraction(b% d_i)
-  ! b% mdot_wind_transfer(b% a_i) = b% s_accretor% mstar_dot * &
-  !      b% wind_xfer_fraction(b% a_i)
-  ! neglect winds
-  b% mdot_wind_transfer(b% d_i) = 0.0d0
-  b% mdot_wind_transfer(b% a_i) = 0.0d0
+  call eval_wind_xfer_fractions(b% binary_id, ierr)
+  if (ierr/=0) then
+     write(*,*) "Error in eval_wind_xfer_fractions"
+     return
+  end if
+  ! remove wind fractions
+  b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
+       b% wind_xfer_fraction(b% d_i)
+  b% mdot_wind_transfer(b% a_i) = b% s_accretor% mstar_dot * &
+       b% wind_xfer_fraction(b% a_i)
+
 
   ! -----------------------------------------------------------------------
   ! Set mdot for the donor
@@ -384,11 +488,12 @@ subroutine L2_mdot(binary_id, ierr)
   ! what MESA would predict on its own:
   b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
        b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
-
+  print *, "Without L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
   ! -----------------------------------------------------------------------
   ! modify by L2 loss:
   b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
   ! -----------------------------------------------------------------------
+  print *, "With L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
 
   ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
@@ -404,14 +509,10 @@ subroutine L2_mdot(binary_id, ierr)
   actual_mtransfer_rate = b% mtransfer_rate*b% fixed_xfer_fraction+b% mdot_wind_transfer(b% d_i) !defined negative
   b% component_mdot(b% a_i) = -actual_mtransfer_rate
 
-
   b% mdot_system_cct = b% mtransfer_rate * b% mass_transfer_delta
+
   b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
        + b% mtransfer_rate * b% mass_transfer_beta
-
-  !TODO: check AM for circumbinary disk losses: if equal to L2, use b%mass_transfer_delta, or not
-
-
 end subroutine L2_mdot
 
 
@@ -430,6 +531,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      return
   end if
 
+  ! TODO: this should be reduced, it isn't right no!
   mdot = b% mtransfer_rate ! g/s
   print *, "log10(mdot/(Msun/yr))=", log10(abs(mdot/(Msun/secyer)))
 
