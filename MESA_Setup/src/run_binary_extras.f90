@@ -98,7 +98,7 @@
       integer function how_many_extra_binary_history_columns(binary_id)
          use binary_def, only: binary_info
          integer, intent(in) :: binary_id
-         how_many_extra_binary_history_columns = 0
+         how_many_extra_binary_history_columns = 2
       end function how_many_extra_binary_history_columns
 
 
@@ -107,7 +107,7 @@
          integer, intent(in) :: binary_id
          integer, intent(in) :: n
          character (len=maxlen_binary_history_column_name) :: names(n)
-         real(dp) :: vals(n)
+         real(dp) :: vals(n), fL2
          integer, intent(out) :: ierr
          ierr = 0
          call binary_ptr(binary_id, b, ierr)
@@ -116,6 +116,17 @@
             return
          end if
 
+         names(1) = 'fL2'
+         call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+              b% s_accretor% m(1)/Msun, &
+              b% mtransfer_rate/(Msun/secyer), &
+              b% separation/Rsun, &
+              0.1d0, & ! disk alpha viscosity
+              1.3d0/2.4d0, &  ! full ionization
+              fL2, ierr)
+         vals(1) = fL2
+         names(2) = 'mdot_L2'
+         vals(1) = (b% s_donor% mstar_dot * fL2)/(Msun/secyer)
       end subroutine data_for_extra_binary_history_columns
 
 

@@ -1,5 +1,5 @@
 ! functions from pmocz/feature/fL2 to produce L2 mass loss as in
-! Lu et al. 2022.
+! Lu et al. 2023 https://academic.oup.com/mnras/article/519/1/1409/6886566
 
 ! TODO: this uses Kramers opacity law for simplicity, switch to
 ! tabulated opacity for self-consistency
@@ -291,11 +291,10 @@ real(dp) function get_min_r(binary_id) result(min_r)
   ! reimplement Ulrich & Burger 1976 's fit to Lubow & Shu 1975
   ! as in de Mink+13, copying code from $MESA_DIR/binary/private/binary_mdot.f90
   qratio = b% m(b% a_i) / b% m(b% d_i)
-  print *, "qratio", qratio
   qratio = min(max(qratio,0.0667d0),15d0)
   min_r = 0.0425d0*b% separation*pow(qratio+qratio*qratio, 0.25d0) ! same units as separation, cm
-  print *, "min_r", min_r, "separation", b% separation
 end function get_min_r
+
 ! ----------------------------------------------------------------------------------------------
 ! The magic happens down here
 
@@ -303,11 +302,12 @@ end function get_min_r
 ! other_adjust_mdots
 subroutine L2_mdot(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
+  ! use binary_wind, only: eval_wind_xfer_fractions
   use const_def, only: dp,  standard_cgrav
   real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, disk_mu
+  real(dp) :: fL2, disk_alpha, disk_mu, actual_mtransfer_rate
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -323,24 +323,41 @@ subroutine L2_mdot(binary_id, ierr)
 
   print *, "initial mdot before L2 application", b% mtransfer_rate
 
-  ! TODO fix default pre-L2 mass loss behavior
-
   ! copy default MT first
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
   ! turn off Eddington limit for non-compact objects
   b% mdot_edd = 0.0d0
   b% mdot_edd_eta = 0d0
-  ! turn off wind mass transfer
-  b% mdot_wind_transfer(b% a_i) = 0d0
-  b% mdot_wind_transfer(b% d_i) = 0d0
-  ! set donor mass loss rate
+  ! solve wind mass transfer
+  ! b% mdot_wind_transfer(b% d_i) is a negative number that gives the
+  ! amount of mass transferred by unit time from the donor to the
+  ! accretor.
+  ! call eval_wind_xfer_fractions(b% binary_id, ierr)
+  ! if (ierr/=0) then
+  !    write(*,*) "Error in eval_wind_xfer_fractions"
+  !    return
+  ! end if
+  ! ! remove wind fractions
+  ! b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
+  !      b% wind_xfer_fraction(b% d_i)
+  ! b% mdot_wind_transfer(b% a_i) = b% s_accretor% mstar_dot * &
+  !      b% wind_xfer_fraction(b% a_i)
+  ! neglect winds
+  b% mdot_wind_transfer(b% d_i) = 0.0d0
+  b% mdot_wind_transfer(b% a_i) = 0.0d0
+
+  ! -----------------------------------------------------------------------
+  ! Set mdot for the donor
   b% s_donor% mstar_dot = b% s_donor% mstar_dot + b% mtransfer_rate - &
        b% mdot_wind_transfer(b% a_i)
+  ! -----------------------------------------------------------------------
 
+  ! Set mdot for accretor
+
+  ! First, check for disk
   min_r = get_min_r(binary_id)
-  print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
-
+  ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
   if (b% r(b% a_i) < min_r) then
      b% accretion_mode = 2 ! means there is a disk
      print *, "There is a disk!"
@@ -354,17 +371,47 @@ subroutine L2_mdot(binary_id, ierr)
           disk_alpha, &
           disk_mu, &
           fL2, ierr)
-     print *, "Lu et al. loss fraction fL2 = ", fL2
-     print *, "mdot accretor would be ", b% s_accretor% mstar_dot
-     b% s_accretor% mstar_dot = b% s_accretor% mstar_dot * fL2
-     print *, "it is cut down to",  b% s_accretor% mstar_dot
+     print *, "Lu et al. 2023 loss fraction fL2 = ", fL2
   else
-     ! direct impact
+     ! direct impact, no disk
      b% accretion_mode = 1
+     fL2 = 0.0d0 ! no dik L2 mass loss if no disk!
   end if
+
+  ! turn off accretion luminosity for non-compact stars
+  b% accretion_luminosity = 0.0d0
+
+  ! what MESA would predict on its own:
+  b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
+       b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
+
+  ! -----------------------------------------------------------------------
+  ! modify by L2 loss:
+  b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
+  ! -----------------------------------------------------------------------
 
   ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
+
+  ! Finally adjust all mdots
+
+  ! mdot_system_transfer is mass lost from the vicinity of each star
+  ! due to inefficient rlof mass transfer, mdot_system_cct is mass lost
+  ! from a circumbinary coplanar toroid.
+  b% mdot_system_transfer(b% d_i) = b% mtransfer_rate * b% mass_transfer_alpha
+
+  ! combine RLOF and winds
+  actual_mtransfer_rate = b% mtransfer_rate*b% fixed_xfer_fraction+b% mdot_wind_transfer(b% d_i) !defined negative
+  b% component_mdot(b% a_i) = -actual_mtransfer_rate
+
+
+  b% mdot_system_cct = b% mtransfer_rate * b% mass_transfer_delta
+  b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
+       + b% mtransfer_rate * b% mass_transfer_beta
+
+  !TODO: check AM for circumbinary disk losses: if equal to L2, use b%mass_transfer_delta, or not
+
+
 end subroutine L2_mdot
 
 
