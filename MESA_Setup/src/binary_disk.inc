@@ -316,6 +316,11 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
 
+  if (b% rl_relative_gap(b% d_i) < 0) then
+     ! no RLOF ongoing
+     return
+  end if
+
   print *, "initial mdot before L2 application", b% mtransfer_rate
 
   ! TODO fix default pre-L2 mass loss behavior
@@ -350,7 +355,9 @@ subroutine L2_mdot(binary_id, ierr)
           disk_mu, &
           fL2, ierr)
      print *, "Lu et al. loss fraction fL2 = ", fL2
-     print *, "need to apply f2 to mdot and jdot!"
+     print *, "mdot accretor would be ", b% s_accretor% mstar_dot
+     b% s_accretor% mstar_dot = b% s_accretor% mstar_dot * fL2
+     print *, "it is cut down to",  b% s_accretor% mstar_dot
   else
      ! direct impact
      b% accretion_mode = 1
