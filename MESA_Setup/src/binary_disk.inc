@@ -508,7 +508,6 @@ subroutine L2_mdot(binary_id, ierr)
   print *, "ratio of bottom to top = ", (1.0d0-fL2)
   ! -----------------------------------------------------------------------
 
-
   ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
 
@@ -520,7 +519,8 @@ subroutine L2_mdot(binary_id, ierr)
   b% mdot_system_transfer(b% d_i) = b% mtransfer_rate * b% mass_transfer_alpha
 
   ! combine RLOF and winds
-  actual_mtransfer_rate = b% mtransfer_rate*b% fixed_xfer_fraction+b% mdot_wind_transfer(b% d_i) !defined negative
+  actual_mtransfer_rate = b% mtransfer_rate * (1.0d0-fL2) * b% fixed_xfer_fraction + &
+       b% mdot_wind_transfer(b% d_i) !defined negative
   b% component_mdot(b% a_i) = -actual_mtransfer_rate
 
   b% mdot_system_cct = b% mtransfer_rate * b% mass_transfer_delta
@@ -545,6 +545,11 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   call binary_ptr(binary_id, b, ierr)
   if (ierr /= 0) then
      write(*,*) 'failed in binary_ptr'
+     return
+  end if
+
+  if (b% rl_relative_gap(b% d_i) < 0) then
+     ! no RLOF ongoing
      return
   end if
 
