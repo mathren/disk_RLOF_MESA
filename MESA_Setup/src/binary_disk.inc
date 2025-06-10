@@ -438,6 +438,7 @@ subroutine L2_mdot(binary_id, ierr)
 
   ! initialize
   actual_mtransfer_rate = 0d0
+  fL2 = 0.0d0
 
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
@@ -488,9 +489,8 @@ subroutine L2_mdot(binary_id, ierr)
           fL2, ierr)
      print *, "Lu et al. 2023 loss fraction fL2 = ", fL2
   else
-     ! direct impact, no disk
+     ! direct impact, no disk, no update to fL2
      b% accretion_mode = 1
-     fL2 = 0.0d0 ! no dik L2 mass loss if no disk!
   end if
 
   ! turn off accretion luminosity for non-compact stars
