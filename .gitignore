@@ -19,3 +19,4 @@ png/*
 *.png
 .DS_Store
 main
+.restart
