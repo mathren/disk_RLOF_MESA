@@ -436,8 +436,6 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
 
-  print *, "initial mdot before L2 application log10(abs(b% mtransfer_rate/(Msun/secyer)))", log10(abs(b% mtransfer_rate/(Msun/secyer)))
-
   ! initialize
   actual_mtransfer_rate = 0d0
 
@@ -506,7 +504,7 @@ subroutine L2_mdot(binary_id, ierr)
   ! modify by L2 loss:
   b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
   ! -----------------------------------------------------------------------
-  print *, "With L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
+  print *, "---With L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
   print *, "ratio of bottom to top = ", (1.0d0-fL2)
   ! -----------------------------------------------------------------------
 
@@ -550,16 +548,14 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      return
   end if
 
-  print *, "in disk accreted material j, log10(mdot/(Msun/yr))=", log10(abs(b% mtransfer_rate/(Msun/secyer)))
-  if (b% mtransfer_rate/(Msun/secyer) <= 1d-50) return
-
   if (b% accretion_mode == 2) then
      ! disk is present
      ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
      ! this mimics qualitatively Paczinski 1991's solution
      j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
      j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
-     omega_ratio_acc = b% s_accretor% omega_avg_surf/ b% s_accretor% omega_crit_avg_surf
+     omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+     print *, "omega_ratio_accretor", omega_ratio_acc
      if (omega_ratio_acc <= b% x_ctrl(1)) then
         j_interp = j_acc_disk
      else if (omega_ratio_acc >= b% x_ctrl(2)) then

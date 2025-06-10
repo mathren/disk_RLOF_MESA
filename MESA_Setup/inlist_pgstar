@@ -1,7 +1,7 @@
 &pgstar
 
 ! this updates the panels for each star but not the binary panel on the right, see inlist_pgbinary
-pgstar_interval                         = 20
+pgstar_interval                         = 1
 !pause                                  = .true.
 
 pgstar_age_disp                         = 2.5
@@ -17,7 +17,7 @@ Grid2_num_rows                          = 8 ! divide plotting region into this m
 
 Grid2_num_plots                         = 7 ! <= 10
 
-Grid2_plot_name(1)                      = 'Profile_Panels1'
+Grid2_plot_name(1)                      = 'History_Panels1'
 Grid2_plot_row(1)                       = 1 ! number from 1 at top
 Grid2_plot_rowspan(1)                   = 2 ! plot spans this number of rows
 Grid2_plot_col(1)                       = 1 ! number from 1 at left
@@ -145,12 +145,12 @@ History_Panels1_num_panels = 1
 History_Panels1_max_width = -1
 History_Panels1_xaxis_name = 'model_number'
 
-History_Panels1_yaxis_name(1) = 'surface_h1'!'log_R'
-History_Panels1_other_yaxis_name(1) = 'surface_he4'! 'log_L'
-History_Panels1_ymin(1) = 0.9
-History_Panels1_ymax(1) = 0
-History_Panels1_other_ymin(1) = 0.9
-History_Panels1_other_ymax(1) = 0
+History_Panels1_yaxis_name(1) = 'surf_avg_omega_div_omega_crit'!'log_R'
+History_Panels1_other_yaxis_name(1) = 'log_R'! 'log_L'
+! History_Panels1_ymin(1) = 0.9
+! History_Panels1_ymax(1) = 0
+! History_Panels1_other_ymin(1) = 0.9
+! History_Panels1_other_ymax(1) = 0
 
 
 !History_Panels1_yaxis_name(2) = 'surface_h1'
