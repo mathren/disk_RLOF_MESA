@@ -428,7 +428,7 @@ subroutine L2_mdot(binary_id, ierr)
   end if
 
   if (b% point_mass_i /= 0) then
-     STOP "not for point masses!"
+     STOP "L2 mass loss not implemented for point accretors!"
   end if
 
   if (b% rl_relative_gap(b% d_i) < 0) then
@@ -436,10 +436,10 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
 
-  print *, "initial mdot before L2 application", b% mtransfer_rate
+  print *, "initial mdot before L2 application log10(abs(b% mtransfer_rate/(Msun/secyer)))", log10(abs(b% mtransfer_rate/(Msun/secyer)))
+
   ! initialize
   actual_mtransfer_rate = 0d0
-
 
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
@@ -456,6 +456,7 @@ subroutine L2_mdot(binary_id, ierr)
      write(*,*) "Error in eval_wind_xfer_fractions"
      return
   end if
+
   ! remove wind fractions
   b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
        b% wind_xfer_fraction(b% d_i)
@@ -469,8 +470,8 @@ subroutine L2_mdot(binary_id, ierr)
        b% mdot_wind_transfer(b% a_i)
   ! -----------------------------------------------------------------------
 
+  ! -----------------------------------------------------------------------
   ! Set mdot for accretor
-
   ! First, check for disk
   min_r = get_min_r(binary_id)
   ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
@@ -506,6 +507,9 @@ subroutine L2_mdot(binary_id, ierr)
   b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
   ! -----------------------------------------------------------------------
   print *, "With L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
+  print *, "ratio of bottom to top = ", (1.0d0-fL2)
+  ! -----------------------------------------------------------------------
+
 
   ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
@@ -535,7 +539,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   use utils_lib, only: mesa_error
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: mdot, min_r, omega_ratio_acc
+  real(dp) :: min_r, omega_ratio_acc
   real(dp) :: j_acc_disk, j_acc_crit, j_interp
   real(dp) :: range_omega_ratio, mid_range_omega_ratio
   type (binary_info), pointer :: b
@@ -546,9 +550,8 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      return
   end if
 
-
-  mdot = b% mtransfer_rate ! g/s
-  ! print *, "log10(mdot/(Msun/yr))=", log10(abs(mdot/(Msun/secyer)))
+  print *, "in disk accreted material j, log10(mdot/(Msun/yr))=", log10(abs(b% mtransfer_rate/(Msun/secyer)))
+  if (b% mtransfer_rate/(Msun/secyer) <= 1d-50) return
 
   if (b% accretion_mode == 2) then
      ! disk is present
