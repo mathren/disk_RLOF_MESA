@@ -167,6 +167,8 @@ Grid2_plot_pad_top(6) = 0.01 ! fraction of full window height for padding at top
 Grid2_plot_pad_bot(6) = 0.00 ! fraction of full window height for padding at bottom
 Grid2_txt_scale_factor(6) = 0.2 ! multiply txt_scale for subplot by this
 
+Text_Summary1_name(8,4) = 'surf_avg_omega_div_omega_crit'
+
 
 
 
