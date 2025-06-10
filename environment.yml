@@ -1,0 +1,10 @@
+name: disk_RLOF
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.5
+  - matplotlib=3.7.2
+  - numpy=1.26.0
+  - joblib=1.2.0
+  - pip:
+    - git+https://github.com/mathren/compare_workdir_MESA/
