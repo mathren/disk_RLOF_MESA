@@ -1,6 +1,3 @@
-! functions from pmocz/feature/fL2 to produce L2 mass loss as in
-! Lu et al. 2023 https://academic.oup.com/mnras/article/519/1/1409/6886566
-
 ! TODO: this uses Kramers opacity law for simplicity, switch to
 ! tabulated opacity for self-consistency
 
@@ -8,9 +5,19 @@
 subroutine eval_L2_mass_loss_fraction(donor_mass, accretor_mass, mass_transfer_rate, orbital_separation, &
      disk_alpha, disk_mu, &
      fL2, ierr)
+
   ! Calculate the (outer) L2 mass-loss fraction
   ! according to Lu et al. (2023, MNRAS 519, 1409) "On rapid binary mass transfer -I. Physical model"
   ! https://ui.adsabs.harvard.edu/abs/2023MNRAS.519.1409L/abstract
+
+  ! constants
+  use const_def, only: dp, pi, pi2, one_third, two_thirds, standard_cgrav, Msun, Rsun, secyer, crad, boltzm, clight, mp
+  real(dp), parameter :: one_fourth = 1.0_dp / 4.0_dp
+  real(dp), parameter :: one_eigth = 1.0_dp / 8.0_dp
+  real(dp), parameter :: three_eigths = 3.0_dp / 8.0_dp
+  real(dp), parameter :: one_ninth = 1.0_dp / 9.0_dp
+  real(dp), parameter :: four_twentyseventh = 4.0_dp / 27.0_dp
+
   real(dp), intent(in) :: donor_mass         ! [M_sun]
   real(dp), intent(in) :: accretor_mass      ! [M_sun]
   real(dp), intent(in) :: mass_transfer_rate ! [M_sun/yr]
@@ -224,6 +231,9 @@ real(dp) function f2_the_T_fL2(the, T, fL2, &
   real(dp), intent(in) :: the, T, fL2
   real(dp), intent(in) :: c3, c4, M1dot, disk_alpha, omega_K, Rd, PhiRd, GM2, PhiL1, PhiL2
   real(dp) :: x, U_over_P, rho
+
+  real(dp), parameter :: seven_fourths = 7.0_dp / 4.0_dp
+
   x = c4 * pow3(T * the) / (1.0_dp - fL2)
   U_over_P = (1.5_dp + x) / (1.0_dp + one_third * x)
   rho = (1.0_dp - fL2) * M1dot / (2.0_dp * pi * disk_alpha * omega_K * pow3(Rd)) / pow2(the)
@@ -256,22 +266,6 @@ real(dp) function T_the_nofL2(the, logthe_grid, logT_arr, n_the, dlogthe)
      T_the_nofL2 = exp10(logT)
   end if
 end function T_the_nofL2
-
-real(dp) function T_the(the, c2, PhiL2, PhiRd, GM2, Rd)
-  real(dp), intent(in) :: the
-  real(dp), intent(in) :: c2, PhiL2, PhiRd, GM2, Rd
-  ! only for non-zero fL2
-  T_the = (8.0_dp * the**2 + 1.0_dp - 2.0_dp * (PhiL2 - PhiRd) / (GM2 / Rd)) / (3.0_dp * c2)
-end function T_the
-
-real(dp) function fL2_the(the, c1, c2, PhiL2, PhiRd, GM2, Rd)
-  real(dp), intent(in) :: the
-  real(dp), intent(in) :: c1, c2, PhiL2, PhiRd, GM2, Rd
-  real(dp) :: T
-  ! only for non-zero fL2
-  T = T_the(the, c2, PhiL2, PhiRd, GM2, Rd)
-  fL2_the =  1.0_dp - c1 * pow4(T) * pow3(the) / (the**2 - c2 * T)
-end function fL2_the
 
 real(dp) function T_the(the, c2, PhiL2, PhiRd, GM2, Rd)
   real(dp), intent(in) :: the
@@ -538,10 +532,12 @@ end subroutine L2_mdot
 subroutine disk_accreted_material_j(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
   use const_def, only: dp
+  use utils_lib, only: mesa_error
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: mdot, min_r
-  real(dp) :: j_acc_disk, j_acc_crit, interp_x
+  real(dp) :: mdot, min_r, omega_ratio_acc
+  real(dp) :: j_acc_disk, j_acc_crit, j_interp
+  real(dp) :: range_omega_ratio, mid_range_omega_ratio
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -550,6 +546,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      return
   end if
 
+
   mdot = b% mtransfer_rate ! g/s
   ! print *, "log10(mdot/(Msun/yr))=", log10(abs(mdot/(Msun/secyer)))
 
@@ -557,11 +554,27 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      ! disk is present
      ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
      ! this mimics qualitatively Paczinski 1991's solution
-     j_acc_disk =
+     j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
      j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
-     ! interpolate between the two
-
+     omega_ratio_acc = b% s_accretor% omega_avg_surf/ b% s_accretor% omega_crit_avg_surf
+     if (omega_ratio_acc <= b% x_ctrl(1)) then
+        j_interp = j_acc_disk
+     else if (omega_ratio_acc >= b% x_ctrl(2)) then
+        j_interp = j_acc_crit
+     else
+        ! interpolate between the two
+        mid_range_omega_ratio = (b% x_ctrl(2) + b% x_ctrl(1))/2.0d0
+        range_omega_ratio = b% x_ctrl(2) - b% x_ctrl(1)
+        j_interp = j_acc_crit+((j_acc_disk - j_acc_crit)/2.0d0) * &
+             (1+tanh(b% x_ctrl(3) * (omega_ratio_acc - b%x_ctrl(2))/(range_omega_ratio)))
+     end if
+     print *, "j_acc_disk", j_acc_disk
+     print *, "j_acc_crit", j_acc_crit
+     print *, "j_interp", j_interp
      ! express as a fraction of keplerian AM
+     b% s_accretor% accreted_material_j = j_interp
+     b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
+          sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
   else
      ! direct impact
      min_r = get_min_r(binary_id)

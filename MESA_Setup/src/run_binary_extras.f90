@@ -125,9 +125,11 @@
               1.3d0/2.4d0, &  ! full ionization
               fL2, ierr)
          vals(1) = fL2
+
          names(2) = 'mdot_L2'
          vals(1) = (b% s_donor% mstar_dot * fL2)/(Msun/secyer)
-      end subroutine data_for_extra_binary_history_columns
+
+       end subroutine data_for_extra_binary_history_columns
 
 
       integer function extras_binary_startup(binary_id,restart,ierr)
@@ -143,6 +145,12 @@
          b% lxtra(1) = .false. ! flag for end of donor's main sequence
          b% lxtra(2) = .false. ! flag for beginning RLOF
          b% lxtra_old(2) = .false.
+
+         if (b% x_ctrl(2) - b% x_ctrl(1) < 0) then
+            print *, "To interpolate we need b% x_ctrl(2) > b% x_ctrl(1)"
+            print *, "Please fix your inlist"
+            STOP "interp values"
+         end if
 
          extras_binary_startup = keep_going
       end function  extras_binary_startup
