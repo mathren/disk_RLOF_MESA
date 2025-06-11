@@ -1,19 +1,22 @@
 # Objective
 
-Implement the ideas from [Paczynski 1991](https://ui.adsabs.harvard.edu/abs/1991ApJ...370..597P/abstract) in MESA using
-`run_binary_extras.f90` physically motivated alternative to
-rotationally-limited MT, possibly accounting for disk wind and L2
+Implement the ideas from [Paczynski
+1991](https://ui.adsabs.harvard.edu/abs/1991ApJ...370..597P/abstract)
+in MESA using `run_binary_extras.f90` physically motivated alternative
+to rotationally-limited MT, possibly accounting for disk wind and L2
 losses.
 
-**N.B.:** we should also use the [Lubow & Shu 1975](https://ui.adsabs.harvard.edu/abs/1975ApJ...198..383L/abstract) results to use this
- **only if** a disk does form (not for direct impact)
-
 The relation \dot{M}(\dot{J}) from the Paczynski solution is computed
-on the side and tabulated for application in MESA. The
-non-conservativeness comes from L2 losses.
+on the side and tabulated for application in MESA. For now interpolate
+with `tanh` between Keplerian value at surface of accretor (if
+accretor is non-critical) and 0 (if accretor approaches critical
+rotation). When to interpolate is controlled by `x_ctrl` parameters in
+`inlist_binary`. The non-conservativeness of mass transfer comes from
+L2 losses, which also lead to losses of angular momentum.
 
-Using [MESA r24.08.1](https://docs.mesastar.org/en/24.08.1/) or later (`dev` version of MESA contain routines for
-L2 mass loss from Lu et al. 2022)
+Using [MESA r24.08.1](https://docs.mesastar.org/en/24.08.1/) or later
+(`dev` version of MESA contain routines for L2 mass loss from Lu et
+al. 2023)
 
 
 # References or background material
@@ -35,10 +38,8 @@ L2 mass loss from Lu et al. 2022)
 # Initial discussion:
 
 -   the disk always fits within the Roche lobe (no truncation needed)
--   L2 mass loss is energetically possible (cf.
-    [L2 mass loss code](https://github.com/wenbinlu/L2massloss)), but can be added later
--   the important thing to implement are dot(M2) and dot(J2) through the boundary layers.
-
+-   L2 mass loss is energetically possible (cf. [L2 mass loss
+-   code](https://github.com/wenbinlu/L2massloss))
 
 ## Input & outputs
 
@@ -46,8 +47,10 @@ Input: $\dot{M}_1$, $\omega_{\rm accretor,surf}$, $M_1$, $M_2$, $a$
 
 Output: $\dot{M}_2$, $\dot{J}_2$
 
-Routines to be used:
+## Routines to be used in `MESA`:
 
 -   `mod_other_accreted_material_j.f90`
 -   `mod_other_adjust_mdots.f90`
 -   `mod_other_binary_jdot.f90`
+
+see also `MESA_setup/src/binary_disk.inc` and `MESA_setup/src/run_binary_extras.f90`.
