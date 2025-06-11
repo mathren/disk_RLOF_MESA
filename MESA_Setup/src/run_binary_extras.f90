@@ -69,6 +69,7 @@
          ! point to function defined in binary_disk.inc
          b% other_adjust_mdots => L2_mdot
          b% other_accreted_material_j => disk_accreted_material_j
+         b% other_extra_jdot => L2_extra_jdot
 
       end subroutine extras_binary_controls
 
@@ -98,7 +99,7 @@
       integer function how_many_extra_binary_history_columns(binary_id)
          use binary_def, only: binary_info
          integer, intent(in) :: binary_id
-         how_many_extra_binary_history_columns = 2
+         how_many_extra_binary_history_columns = 3
       end function how_many_extra_binary_history_columns
 
 
@@ -117,18 +118,23 @@
          end if
 
          names(1) = 'fL2'
-         call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-              b% s_accretor% m(1)/Msun, &
-              b% mtransfer_rate/(Msun/secyer), &
-              b% separation/Rsun, &
-              0.1d0, & ! disk alpha viscosity
-              1.3d0/2.4d0, &  ! full ionization
-              fL2, ierr)
-         vals(1) = fL2
-
          names(2) = 'mdot_L2'
-         vals(1) = (b% s_donor% mstar_dot * fL2)/(Msun/secyer)
-
+         names(3) = 'extra_jdot'
+         if (b% accretion_mode /= 2) then ! no disk
+            vals(1) = 0.0d0
+            vals(2) = 0.0d0
+         else
+            call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+                 b% s_accretor% m(1)/Msun, &
+                 b% mtransfer_rate/(Msun/secyer), &
+                 b% separation/Rsun, &
+                 0.1d0, & ! disk alpha viscosity
+                 1.3d0/2.4d0, &  ! full ionization
+                 fL2, ierr)
+            vals(1) = fL2
+            vals(2) = (b% s_donor% mstar_dot * fL2)/(Msun/secyer)
+         end if
+         vals(3) = b% extra_jdot
        end subroutine data_for_extra_binary_history_columns
 
 

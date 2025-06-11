@@ -13,11 +13,20 @@ m1                            = 20.0d0  ! donor mass in Msun
 m2                            = 15.0d0 ! companion mass in Msun
 initial_period_in_days        = 100d0
 
+! -----------------------------------------------------------------
 ! add custom routines
 use_other_accreted_material_j = .true.
 do_j_accretion                = .false. ! cannot be used together with use_other_accreted_material_j, reimplemented
-
 use_other_adjust_mdots        = .true.
+use_other_extra_jdot          = .true.
+
+! probably increase below to be > 0.8
+x_ctrl(1)                     = 0.1d0 ! for omega/omega_crit < b% x_ctrl(1) use disk AM accretion
+! for b% x_ctrl(1) < omega/omega_crit < b% x_ctrl(2) interpolate with tanh between disk AM and 0.0
+x_ctrl(2)                     = 0.99d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion
+x_ctrl(3)                     = 1.0d0  ! steepness parameter for interpolation
+! -----------------------------------------------------------------
+
 
 write_header_frequency        = 1
 limit_retention_by_mdot_edd   = .false. ! this is for BH secondaries
@@ -83,12 +92,6 @@ append_to_star_history        = .false.
 write_header_frequency        = 1
 history_interval              = 1
 terminal_interval             = 10
-
-x_ctrl(1)                     = 0.8d0 ! for omega/omega_crit < b% x_ctrl(1) use disk AM accretion
-! for b% x_ctrl(1) < omega/omega_crit < b% x_ctrl(2) interpolate with tanh between disk AM and 0.0
-x_ctrl(2)                     = 0.99d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion
-x_ctrl(3)                     = 1.0d0  ! steepness parameter for interpolation
-
 
 / ! end of binary_controls namelist
 

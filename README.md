@@ -50,3 +50,4 @@ Routines to be used:
 
 -   `mod_other_accreted_material_j.f90`
 -   `mod_other_adjust_mdots.f90`
+-   `mod_other_binary_jdot.f90`

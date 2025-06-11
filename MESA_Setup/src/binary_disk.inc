@@ -418,7 +418,7 @@ subroutine L2_mdot(binary_id, ierr)
   real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, disk_mu, actual_mtransfer_rate
+  real(dp) :: fL2, disk_alpha, actual_mtransfer_rate
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -478,17 +478,15 @@ subroutine L2_mdot(binary_id, ierr)
      b% accretion_mode = 2 ! means there is a disk
      print *, "There is a disk!"
      disk_alpha = 0.1d0
-     ! TODO: maybe use donor surface mu (assuming no recombination in the stream)?
-     disk_mu = 1.3d0/2.4d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
           b% s_accretor% m(1)/Msun, &
           b% mtransfer_rate/(Msun/secyer), &
           b% separation/Rsun, &
           disk_alpha, &
-          disk_mu, &
+          b% s_donor% mu(1), &
           fL2, ierr)
-     print *, "Lu et al. 2023 loss fraction fL2 = ", fL2
   else
+     print *, "Direct impact!"
      ! direct impact, no disk, no update to fL2
      b% accretion_mode = 1
   end if
@@ -499,14 +497,9 @@ subroutine L2_mdot(binary_id, ierr)
   ! what MESA would predict on its own:
   b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
        b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
-  print *, "Without L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
   ! -----------------------------------------------------------------------
   ! modify by L2 loss:
   b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
-  ! -----------------------------------------------------------------------
-  print *, "---With L2 loss: dotM2 = ", log10(b% s_accretor% mstar_dot/(Msun/secyer))
-  print *, "ratio of bottom to top = ", (1.0d0-fL2)
-  ! -----------------------------------------------------------------------
 
   ! now deal with angular momentum
   call b% other_accreted_material_j(b% binary_id, ierr)
@@ -559,33 +552,90 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      ! this mimics qualitatively Paczinski 1991's solution
      j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
      j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
+     ! interpolate between the two using omega/omega_crit as interpolation variable
      omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-     print *, "omega_ratio_accretor", omega_ratio_acc
      if (omega_ratio_acc <= b% x_ctrl(1)) then
         j_interp = j_acc_disk
      else if (omega_ratio_acc >= b% x_ctrl(2)) then
         j_interp = j_acc_crit
      else
-        ! interpolate between the two
         mid_range_omega_ratio = (b% x_ctrl(2) + b% x_ctrl(1))/2.0d0
         range_omega_ratio = b% x_ctrl(2) - b% x_ctrl(1)
         j_interp = j_acc_crit+((j_acc_disk - j_acc_crit)/2.0d0) * &
              (1+tanh(b% x_ctrl(3) * (omega_ratio_acc - b%x_ctrl(2))/(range_omega_ratio)))
      end if
-     print *, "j_acc_disk", j_acc_disk
-     print *, "j_acc_crit", j_acc_crit
-     print *, "j_interp", j_interp
-     ! express as a fraction of keplerian AM
      b% s_accretor% accreted_material_j = j_interp
-     b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
-          sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
+     b% xtra(1) = j_acc_disk
+     b% xtra(2) = j_interp
+     print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
   else
      ! direct impact
      min_r = get_min_r(binary_id)
      b% s_accretor% accreted_material_j = &
           sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
-     b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
-          sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
   end if
-
+  ! fix ratio to Keplerian
+  b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
+          sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
 end subroutine disk_accreted_material_j
+
+! other_extra_jdot
+subroutine L2_extra_jdot(binary_id, ierr)
+  use binary_def, only : binary_info, binary_ptr
+  use const_def, only: dp, pi
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  real(dp) :: fL2, disk_alpha, xL2, rL2, log_q, omega_orb
+  real(dp) :: L2_am_loss_rate, delta_j, disk_torque_on_orbit
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+  ! initialize
+  b% extra_jdot = 0.0d0
+  fL2 = 0.0d0
+  L2_am_loss_rate = 0.0d0
+  disk_torque_on_orbit = 0.0d0
+
+  if (b% accretion_mode /= 2) then
+     ! no disk, no extra torque
+     return
+  else
+     ! disk
+     disk_alpha = 0.1d0
+     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+          b% s_accretor% m(1)/Msun, &
+          b% mtransfer_rate/(Msun/secyer), &
+          b% separation/Rsun, &
+          disk_alpha, &
+          b% s_donor% mu(1), &
+          fL2, ierr)
+     if (fL2 == 0.0d0) then
+        ! there is a disk but no L2 mass loss
+        return
+     else
+        ! there is a disk and there is L2 mass loss
+        log_q = log10(b% s_accretor% m(1)/ b% s_donor% m(1))
+        xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! [a]
+        rL2 = b% separation * xL2 ! position of L2 based on fits in Lu+23
+        omega_orb = 2*pi/b% period
+        ! add AM loss from L2 as amount of mass lost * specific AM at L2
+        L2_am_loss_rate = - ((b% s_donor% mstar_dot * fL2)) * & ! amount of mass lost at L2
+             rL2*rL2*omega_orb ! specific AM at L2
+        print *, "L2 am loss", L2_am_loss_rate
+        delta_j = b% xtra(2) - b% xtra(1)
+        print *, "delta_j", delta_j
+        if (delta_j <= 0.0) then
+           ! accretor accreted less less AM than Keplerian
+           b% extra_jdot = L2_am_loss_rate + delta_j/b% s_donor% dt
+        else
+           ! accretor got >= keplerian, nothing to add
+           b% extra_jdot = L2_am_loss_rate
+        end if
+     end if
+  end if
+  print *, "extra_jdot = ", b% extra_jdot
+end subroutine L2_extra_jdot
