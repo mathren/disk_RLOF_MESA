@@ -623,14 +623,14 @@ subroutine L2_extra_jdot(binary_id, ierr)
         rL2 = b% separation * xL2 ! position of L2 based on fits in Lu+23
         omega_orb = 2*pi/b% period
         ! add AM loss from L2 as amount of mass lost * specific AM at L2
-        L2_am_loss_rate = - ((b% s_donor% mstar_dot * fL2)) * & ! amount of mass lost at L2
+        L2_am_loss_rate = ((b% s_donor% mstar_dot * fL2)) * & ! amount of mass lost at L2, note that mstar_dot is negative
              rL2*rL2*omega_orb ! specific AM at L2
         print *, "L2 am loss", L2_am_loss_rate
         delta_j = b% xtra(2) - b% xtra(1)
         print *, "delta_j", delta_j
         if (delta_j <= 0.0) then
            ! accretor accreted less less AM than Keplerian
-           b% extra_jdot = L2_am_loss_rate + delta_j/b% s_donor% dt
+           b% extra_jdot = L2_am_loss_rate - delta_j/b% s_donor% dt ! delta_j is negative, -delta_j/timestep is a positive torque
         else
            ! accretor got >= keplerian, nothing to add
            b% extra_jdot = L2_am_loss_rate
