@@ -23,8 +23,8 @@ use_other_extra_jdot          = .true.
 ! probably increase below to be > 0.8
 x_ctrl(1)                     = 0.1d0 ! for omega/omega_crit < b% x_ctrl(1) use disk AM accretion
 ! for b% x_ctrl(1) < omega/omega_crit < b% x_ctrl(2) interpolate with tanh between disk AM and 0.0
-x_ctrl(2)                     = 0.99d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion
-x_ctrl(3)                     = 1.0d0  ! steepness parameter for interpolation
+x_ctrl(2)                     = 0.9d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion
+x_ctrl(3)                     = 10.0d0  ! steepness parameter for interpolation
 ! -----------------------------------------------------------------
 
 

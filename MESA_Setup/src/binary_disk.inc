@@ -532,7 +532,6 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   integer, intent(out) :: ierr
   real(dp) :: min_r, omega_ratio_acc
   real(dp) :: j_acc_disk, j_acc_crit, j_interp
-  real(dp) :: range_omega_ratio, mid_range_omega_ratio
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -555,14 +554,11 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      ! interpolate between the two using omega/omega_crit as interpolation variable
      omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
      if (omega_ratio_acc <= b% x_ctrl(1)) then
-        j_interp = j_acc_disk
+        j_interp = j_acc_disk  ! Keplerian value
      else if (omega_ratio_acc >= b% x_ctrl(2)) then
-        j_interp = j_acc_crit
+        j_interp = j_acc_crit  ! null -- or implement a solution of Paczynski's idea with dependence on b% mtransfer_rate of b% s_accretor% mstar_dot
      else
-        mid_range_omega_ratio = (b% x_ctrl(2) + b% x_ctrl(1))/2.0d0
-        range_omega_ratio = b% x_ctrl(2) - b% x_ctrl(1)
-        j_interp = j_acc_crit+((j_acc_disk - j_acc_crit)/2.0d0) * &
-             (1+tanh(b% x_ctrl(3) * (omega_ratio_acc - b%x_ctrl(2))/(range_omega_ratio)))
+        j_interp = j_acc_disk * (1.0d0 - tanh(b%x_ctrl(3)*(omega_ratio_acc  - b%x_ctrl(1))/(b%x_ctrl(2)-b%x_ctrl(1)))) ! modify this if j_acc_crit /= 0d0
      end if
      b% s_accretor% accreted_material_j = j_interp
      b% xtra(1) = j_acc_disk
