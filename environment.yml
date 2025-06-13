@@ -6,6 +6,6 @@ dependencies:
   - matplotlib=3.7.2
   - numpy=1.26.0
   - joblib=1.2.0
+  - fortls
   - pip:
     - git+https://github.com/mathren/compare_workdir_MESA/
-    - fotrls
