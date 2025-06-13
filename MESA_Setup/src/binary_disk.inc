@@ -479,12 +479,17 @@ end subroutine disk_accreted_material_j
 
 
 ! other_adjust_mdots
-! This routine implements the mass lost from the accretion disk following Lu et al. 2023
-! Based on an energetic argument, we calculate the fraction of the mass lost
-! by the donor that escapes through L2 and implement both the decrease in
-! accretion rate of the secondary and (with other_jdot) the loss of orbital AM
+! This routine implements the mass lost from the accretion disk
+! following Lu et al. 2023 Based on an energetic argument, we
+! calculate the fraction of the mass lost by the donor that escapes
+! through L2 and implement both the decrease in accretion rate of the
+! secondary and (with other_jdot) the loss of orbital AM the change in
+! mass transfer due to the L2 losses are added as a term to the mass
+! tranfer efficiency, which becomes 1-alpha-beta-delta-fL2 (see
+! comment in $MESA_DIR/binary/defaults/controls.default)
 subroutine L2_adjust_mdots(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
+  use binary_lib, only : binary_eval_accreted_material_j
   ! use binary_wind, only: eval_wind_xfer_fractions
   use const_def, only: dp,  standard_cgrav
   real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
@@ -637,8 +642,8 @@ subroutine L2_extra_jdot(binary_id, ierr)
         xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! xL2 = rL2/a
         omega_orb = 2*pi/b% period ! 1/sec
         ! add AM loss from L2, see Eq. 36 in Lu et al. 2023
-        L2_am_loss_rate = ((b% mtransfer_rate * fL2)) * g_b * & ! amount of mass lost at L2, note that mtransfer_rate is negative
-         omega_orb * pow2(b% separation) * pow2(xL2-b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1)))
+        L2_am_loss_rate = ((b% s_donor%mstar_dot * fL2)) * g_b * & ! amount of mass lost at L2, note that mstar_dot is negative
+         omega_orb * pow2(b% separation) * pow2(xL2-(b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1))))
         ! print *, "L2 am loss", L2_am_loss_rate
         ! delta_j = b% xtra(2) - b% xtra(1) ! accreted by secondary minus Keplerian at secondary surface
         !                                   ! if negative, assume it goes in the secondary accretion disk, and feed it
