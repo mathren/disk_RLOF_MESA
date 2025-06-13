@@ -595,7 +595,7 @@ subroutine L2_extra_jdot(binary_id, ierr)
   use const_def, only: dp, pi
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, xL2, log_q, omega_orb,
+  real(dp) :: fL2, disk_alpha, xL2, log_q, omega_orb
   real(dp) :: L2_am_loss_rate, delta_j, disk_torque_on_orbit
   real(dp), parameter  :: g_b = 1.0d0
   type (binary_info), pointer :: b
