@@ -132,7 +132,7 @@
                  1.3d0/2.4d0, &  ! full ionization
                  fL2, ierr)
             vals(1) = fL2
-            vals(2) = (b% s_donor% mstar_dot * fL2)/(Msun/secyer)
+            vals(2) = (b% mtransfer_rate * fL2)/(Msun/secyer)
          end if
          vals(3) = b% extra_jdot
        end subroutine data_for_extra_binary_history_columns
