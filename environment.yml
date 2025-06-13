@@ -8,3 +8,4 @@ dependencies:
   - joblib=1.2.0
   - pip:
     - git+https://github.com/mathren/compare_workdir_MESA/
+    - fotrls
