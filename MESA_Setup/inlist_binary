@@ -84,7 +84,7 @@ do_initial_orbit_sync_2       = .true.
 
 ! accretor_overflow_terminate   = 2d0
 
-photo_interval                = 200
+photo_interval                = 50
 !photo_digits                 = 8
 append_to_star_history        = .false.
 

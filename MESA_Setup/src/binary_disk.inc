@@ -487,8 +487,9 @@ subroutine L2_mdot(binary_id, ierr)
           fL2, ierr)
   else
      print *, "Direct impact!"
-     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(2)) then
+     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
         b% accretion_mode = 3 ! 3 means there is a decretion disk
+        print *, "and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
      else
         ! direct impact, no disk, no update to fL2
         b% accretion_mode = 1
@@ -498,7 +499,7 @@ subroutine L2_mdot(binary_id, ierr)
   ! turn off accretion luminosity for non-compact stars
   b% accretion_luminosity = 0.0d0
 
-  ! what MESA would predict on its own:
+  ! pre L2 mass loss value:
   b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
        b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
   ! -----------------------------------------------------------------------
@@ -551,8 +552,9 @@ subroutine disk_accreted_material_j(binary_id, ierr)
 
   ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
   ! this mimics qualitatively Paczinski 1991's solution
-  j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
-  j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
+  j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! specific Keplerian AM at accretor surface w.r.t. accretor
+  j_acc_crit = 0.0d0 ! no AM accretion close to critical rotation, as per Paczynski's work
+
   omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
   print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
 
@@ -561,7 +563,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      min_r = get_min_r(binary_id)
      b% s_accretor% accreted_material_j = &
           sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
-  else if (b% accretion_mode >= 2) then
+  else if (b% accretion_mode == 2) then
      ! disk is present
      ! interpolate between Keplerian and 0.0d0 using omega/omega_crit as interpolation variable
      if (omega_ratio_acc <= b% x_ctrl(1)) then
@@ -576,7 +578,6 @@ subroutine disk_accreted_material_j(binary_id, ierr)
              (b%x_ctrl(2) - b%x_ctrl(1)))))
      end if
      b% s_accretor% accreted_material_j = j_interp
-     ! save to pass later for output, can be removed later
      b% xtra(1) = j_acc_disk
      b% xtra(2) = j_interp
      print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
@@ -594,8 +595,9 @@ subroutine L2_extra_jdot(binary_id, ierr)
   use const_def, only: dp, pi
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, xL2, rL2, log_q, omega_orb
+  real(dp) :: fL2, disk_alpha, xL2, log_q, omega_orb,
   real(dp) :: L2_am_loss_rate, delta_j, disk_torque_on_orbit
+  real(dp), parameter  :: g_b = 1.0d0
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -628,14 +630,16 @@ subroutine L2_extra_jdot(binary_id, ierr)
      else
         ! there is a disk and there is L2 mass loss
         log_q = log10(b% s_accretor% m(1)/ b% s_donor% m(1))
-        xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! [a]
-        rL2 = b% separation * xL2 ! position of L2 based on fits in Lu+23
-        omega_orb = 2*pi/b% period
-        ! add AM loss from L2 as amount of mass lost * specific AM at L2
-        L2_am_loss_rate = ((b% s_donor% mstar_dot * fL2)) * & ! amount of mass lost at L2, note that mstar_dot is negative
-             rL2*rL2*omega_orb ! specific AM at L2
+        ! position of L2 w.r.t. center of mass according to Lu et al. 23 fit in units of separation
+        xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! xL2 = rL2/a
+        omega_orb = 2*pi/b% period ! 1/sec
+        ! add AM loss from L2, see Eq. 36 in Lu et al. 2023
+        L2_am_loss_rate = ((b% mtransfer_rate * fL2)) * g_b * & ! amount of mass lost at L2, note that mtransfer_rate is negative
+         omega_orb * pow2(b% separation) * pow2(xL2-b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1)))
         print *, "L2 am loss", L2_am_loss_rate
-        delta_j = b% xtra(2) - b% xtra(1)
+        delta_j = b% xtra(2) - b% xtra(1) ! accreted by secondary minus Keplerian at secondary surface
+                                          ! if negative, assume it goes in the secondary accretion disk, and feed it
+                                          ! back to the orbit
         print *, "delta_j", delta_j
         if (delta_j <= 0.0) then
            ! accretor accreted less less AM than Keplerian
