@@ -653,10 +653,9 @@ subroutine L2_extra_jdot(binary_id, ierr)
         ! end if
         b% extra_jdot = L2_am_loss_rate
      end if
-    else if (b% accretion_mode == 3) then
+  else if (b% accretion_mode == 3) then
        ! decretion disk and direct hit, treat decretion disk like accretion disk
-       return
-    end if
+     return
   end if
 
   print *, "extra_jdot = ", b% extra_jdot
