@@ -467,15 +467,13 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      b% s_accretor% accreted_material_j = j_acc_crit ! assume no AM accretion
   end if
   ! save for reuse later
-  b% xtra(1) = j_acc_disk
-  b% xtra(2) = b% s_accretor% accreted_material_j
-  print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
+  ! b% xtra(1) = j_acc_disk
+  ! b% xtra(2) = b% s_accretor% accreted_material_j
+  ! print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
   ! fix ratio to Keplerian
   b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
           sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
 end subroutine disk_accreted_material_j
-
-
 
 
 ! other_adjust_mdots
