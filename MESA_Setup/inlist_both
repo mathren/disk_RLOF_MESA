@@ -71,7 +71,7 @@ Pextra_factor                             = 2.0 ! put a bit of a lid on the star
 hot_wind_scheme                           = 'Dutch'
 cool_wind_RGB_scheme                      = 'Dutch'
 cool_wind_AGB_scheme                      = 'Dutch'
-Dutch_scaling_factor                      = 0.0d0 ! 0.8 ! turn off winds for testing
+Dutch_scaling_factor                      = 1.0d0 ! 0.8 ! turn off winds for testing
 mdot_omega_power                          = 0.43d0
 
 ! mixing
@@ -86,7 +86,8 @@ mixing_length_alpha                       = 2.0d0
 alpha_semiconvection                      = 1.0d0
 thermohaline_coeff                        = 1000.0d0
 ! mlt_make_surface_no_mixing                = .true.
-! convergence_ignore_equL_residuals         = .true.
+
+convergence_ignore_equL_residuals         = .true.
 
 ! overshoot controls
 overshoot_scheme(1)                     = 'exponential'

@@ -16,7 +16,7 @@ Orbit_win_flag                      = .false.
 Orbit_win_width                     = 8
 
 
-Grid1_win_flag                      = .false.
+Grid1_win_flag                      = .true.
 
 Grid1_win_width                     = 13
 Grid1_win_aspect_ratio              = 0.58
@@ -77,12 +77,20 @@ Grid1_plot_pad_top(3)               = 0.00
 Grid1_txt_scale_factor(3)           = 0.4
 
 History_panels1_title               = ''
-History_panels1_num_panels          = 2
+History_panels1_num_panels          = 3
 History_panels1_xaxis_name          = 'model_number'
+
 History_panels1_yaxis_name(1)       = 'rl_relative_overflow_1'
 History_panels1_other_yaxis_name(1) = 'rl_relative_overflow_2'
+
+
 History_panels1_yaxis_name(2)       = 'period_days'
 History_panels1_other_yaxis_name(2) = 'lg_mtransfer_rate'
+
+History_panels1_yaxis_name(3)       = 'acc_am_div_kep_am'
+History_panels1_other_yaxis_name(3) = 'accretion_mode'
+
+
 History_panels1_other_ymin(2)       = -10
 History_panels1_max_width           = -1
 

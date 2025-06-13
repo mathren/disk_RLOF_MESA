@@ -539,7 +539,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      write(*,*) 'failed in binary_ptr'
      return
   end if
-
+  print *, "in disk_accreted_material_j"
   if (b% rl_relative_gap(b% d_i) < 0) then
      ! no RLOF ongoing
      return
@@ -553,12 +553,17 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
      ! interpolate between the two using omega/omega_crit as interpolation variable
      omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+     print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
      if (omega_ratio_acc <= b% x_ctrl(1)) then
         j_interp = j_acc_disk  ! Keplerian value
      else if (omega_ratio_acc >= b% x_ctrl(2)) then
         j_interp = j_acc_crit  ! null -- or implement a solution of Paczynski's idea with dependence on b% mtransfer_rate of b% s_accretor% mstar_dot
      else
-        j_interp = j_acc_disk * (1.0d0 - tanh(b%x_ctrl(3)*(omega_ratio_acc  - b%x_ctrl(1))/(b%x_ctrl(2)-b%x_ctrl(1)))) ! modify this if j_acc_crit /= 0d0
+        j_interp = j_acc_disk + &
+             0.5d0*(j_acc_crit-j_acc_disk) * &
+             (1+tanh(b%x_ctrl(3)* &
+             (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
+             (b%x_ctrl(2) - b%x_ctrl(1)))))
      end if
      b% s_accretor% accreted_material_j = j_interp
      b% xtra(1) = j_acc_disk
