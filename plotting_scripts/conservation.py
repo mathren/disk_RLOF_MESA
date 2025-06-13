@@ -34,7 +34,7 @@ if __name__ == "__main__":
     ax2 = fig.add_subplot(gs[55:100,:])
     ax3 = fig.add_subplot(gs[105:,:])
     bx1 = ax1.twinx()
-    root = "../MESA_Setup/20_18_100/"
+    root = "../MESA_Setup/"
     bin_hfile = root+'binary_history.data'
     h1 = root+'LOGS1/history.data'
     h2 = root+'LOGS2/history.data'
