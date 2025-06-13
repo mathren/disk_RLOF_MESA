@@ -577,7 +577,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
              (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
              (b%x_ctrl(2) - b%x_ctrl(1)))))
      end if
-     print *, "is j_interp>j_acc_disk" j_interp > j_acc_disk
+     print *, "is j_interp>j_acc_disk", j_interp > j_acc_disk
      b% s_accretor% accreted_material_j = j_interp
      b% xtra(1) = j_acc_disk
      b% xtra(2) = j_interp
