@@ -40,13 +40,13 @@ if __name__ == "__main__":
     h2 = root+'LOGS2/history.data'
     src, col = getSrcCol(bin_hfile)
     fL2 = src[:, col.index("fL2")]
-    MdotL2 = src[:, col.index("mdot_L2")]
+    mdot_L2 = src[:, col.index("mdot_L2")]
     extra_jdot = src[:, col.index("extra_jdot")]
     accretion_mode = src[:, col.index("accretion_mode")]
     time = src[:, col.index("model_number")]  # src[:, col.index("age")]
     ax1.plot(time, fL2)
     ax2.plot(time, mdot_L2)
-    ax3.plot(time, )
+    ax3.plot(time, extra_jdot)
     ax2.plot(time, mdot_L2)
     bx1.plot(time, accretion_mode, c='C2')
     bx1.set_ylabel(r"Accretion mode", color='C2')
