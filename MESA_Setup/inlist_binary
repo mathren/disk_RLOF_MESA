@@ -25,6 +25,8 @@ x_ctrl(1)                     = 0.75d0 ! for omega/omega_crit < b% x_ctrl(1) use
 ! for b% x_ctrl(1) < omega/omega_crit < b% x_ctrl(2) interpolate with tanh between disk AM and 0.0
 x_ctrl(2)                     = 0.95d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion, also used to prevent direct accretion resuming
 x_ctrl(3)                     = 1.0d0  ! steepness parameter for interpolation
+x_logical_ctrl(1)             = .false. ! include L2 Mass and AM loss or not
+x_logical_ctrl(2)             = .false. ! allow critical accretion following qualitatively Paczynski et al. 1991
 ! -----------------------------------------------------------------
 
 

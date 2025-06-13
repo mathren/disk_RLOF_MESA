@@ -411,7 +411,7 @@ end subroutine Bondi_Hoyle_wind_transfer
 ! The magic happens down here
 
 ! other_adjust_mdots
-subroutine L2_mdot(binary_id, ierr)
+subroutine L2_adjust_mdots(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
   ! use binary_wind, only: eval_wind_xfer_fractions
   use const_def, only: dp,  standard_cgrav
@@ -427,6 +427,10 @@ subroutine L2_mdot(binary_id, ierr)
      return
   end if
 
+  ! initialize
+  actual_mtransfer_rate = 0d0
+  fL2 = 0.0d0
+
   if (b% point_mass_i /= 0) then
      STOP "L2 mass loss not implemented for point accretors!"
   end if
@@ -435,10 +439,6 @@ subroutine L2_mdot(binary_id, ierr)
      ! no RLOF ongoing
      return
   end if
-
-  ! initialize
-  actual_mtransfer_rate = 0d0
-  fL2 = 0.0d0
 
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
@@ -499,15 +499,15 @@ subroutine L2_mdot(binary_id, ierr)
   ! turn off accretion luminosity for non-compact stars
   b% accretion_luminosity = 0.0d0
 
-  ! pre L2 mass loss value:
-  b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
+  ! modify L2 mass loss value:
+  b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot - &
        b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
   ! -----------------------------------------------------------------------
-  ! modify by L2 loss:
-  b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot
 
-  ! now deal with angular momentum
-  call b% other_accreted_material_j(b% binary_id, ierr)
+  if (b% x_logical_ctrl(2) .eqv. .true.) then
+     ! now deal with angular momentum
+     call b% other_accreted_material_j(b% binary_id, ierr)
+  end if
 
   ! Finally adjust all mdots
 
@@ -525,7 +525,7 @@ subroutine L2_mdot(binary_id, ierr)
 
   b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
        + b% mtransfer_rate * b% mass_transfer_beta
-end subroutine L2_mdot
+end subroutine L2_adjust_mdots
 
 
 ! other_accreted_material_j
@@ -613,10 +613,10 @@ subroutine L2_extra_jdot(binary_id, ierr)
   L2_am_loss_rate = 0.0d0
   ! disk_torque_on_orbit = 0.0d0
 
-  if (b% accretion_mode == 1) then
+  if ((b% accretion_mode == 1) .or. (b% accretion_mode == 3)) then
      ! no disk, no extra torque
      return
-  else if ((b% accretion_mode == 2) .or. (b% accretion_mode == 3)) then
+  else if (b% accretion_mode == 2) then
      ! disk (accretion if 2, decretion+direct impact if 3)
      disk_alpha = 0.1d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
@@ -653,5 +653,7 @@ subroutine L2_extra_jdot(binary_id, ierr)
         b% extra_jdot = L2_am_loss_rate
      end if
   end if
+  ! overwrite for testing
+  if (b% x_logical_ctrl(1) .eqv. .false.) b% extra_jdot = 0
   print *, "extra_jdot = ", b% extra_jdot
 end subroutine L2_extra_jdot
