@@ -46,6 +46,9 @@ mdot_revise_factor = 1.2
 implicit_mdot_boost = 0.1
 max_mdot_jump_for_rotation = 10d0
 
+    ! report_solver_progress = .true.
+
+
 / ! end of controls namelist
 
 

@@ -487,8 +487,12 @@ subroutine L2_mdot(binary_id, ierr)
           fL2, ierr)
   else
      print *, "Direct impact!"
-     ! direct impact, no disk, no update to fL2
-     b% accretion_mode = 1
+     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(2)) then
+        b% accretion_mode = 3 ! 3 means there is a decretion disk
+     else
+        ! direct impact, no disk, no update to fL2
+        b% accretion_mode = 1
+     end if
   end if
 
   ! turn off accretion luminosity for non-compact stars
@@ -545,15 +549,21 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      return
   end if
 
-  if (b% accretion_mode == 2) then
+  ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
+  ! this mimics qualitatively Paczinski 1991's solution
+  j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
+  j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
+  omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+  print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
+
+  if (b% accretion_mode == 1) then
+     ! direct impact
+     min_r = get_min_r(binary_id)
+     b% s_accretor% accreted_material_j = &
+          sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
+  else if (b% accretion_mode >= 2) then
      ! disk is present
-     ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
-     ! this mimics qualitatively Paczinski 1991's solution
-     j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! Keplerian AM at accretor surface
-     j_acc_crit = 0.0d0 ! no accretion close to critical rotation, as per Paczynski's work
-     ! interpolate between the two using omega/omega_crit as interpolation variable
-     omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-     print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
+     ! interpolate between Keplerian and 0.0d0 using omega/omega_crit as interpolation variable
      if (omega_ratio_acc <= b% x_ctrl(1)) then
         j_interp = j_acc_disk  ! Keplerian value
      else if (omega_ratio_acc >= b% x_ctrl(2)) then
@@ -561,21 +571,19 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      else
         j_interp = j_acc_disk + &
              0.5d0*(j_acc_crit-j_acc_disk) * &
-             (1+tanh(b%x_ctrl(3)* &
+             (1+tanh(b%x_ctrl(3)* &  ! tanh for smooth interpolation
              (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
              (b%x_ctrl(2) - b%x_ctrl(1)))))
      end if
      b% s_accretor% accreted_material_j = j_interp
+     ! save to pass later for output, can be removed later
      b% xtra(1) = j_acc_disk
      b% xtra(2) = j_interp
      print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
-  else
-     ! direct impact
-     min_r = get_min_r(binary_id)
-     b% s_accretor% accreted_material_j = &
-          sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
+  ! else if (b% accretion_mode == 3) then
+  ! implement what jdot to use for direct impact at critical rotation
   end if
-  ! fix ratio to Keplerian
+     ! fix ratio to Keplerian
   b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
           sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
 end subroutine disk_accreted_material_j

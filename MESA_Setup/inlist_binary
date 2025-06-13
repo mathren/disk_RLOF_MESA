@@ -10,7 +10,7 @@ pgbinary_flag                 = .true.
 &binary_controls
 
 m1                            = 20.0d0  ! donor mass in Msun
-m2                            = 15.0d0 ! companion mass in Msun
+m2                            = 18.0d0 ! companion mass in Msun
 initial_period_in_days        = 100d0
 
 ! -----------------------------------------------------------------
@@ -21,10 +21,10 @@ use_other_adjust_mdots        = .true.
 use_other_extra_jdot          = .true.
 
 ! probably increase below to be > 0.8
-x_ctrl(1)                     = 0.90d0 ! for omega/omega_crit < b% x_ctrl(1) use disk AM accretion
+x_ctrl(1)                     = 0.75d0 ! for omega/omega_crit < b% x_ctrl(1) use disk AM accretion
 ! for b% x_ctrl(1) < omega/omega_crit < b% x_ctrl(2) interpolate with tanh between disk AM and 0.0
-x_ctrl(2)                     = 0.95d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion
-x_ctrl(3)                     = 10.0d0  ! steepness parameter for interpolation
+x_ctrl(2)                     = 0.95d0 ! for omega/omega_crit > b% x_ctrl(2) no AM accretion, also used to prevent direct accretion resuming
+x_ctrl(3)                     = 1.0d0  ! steepness parameter for interpolation
 ! -----------------------------------------------------------------
 
 
