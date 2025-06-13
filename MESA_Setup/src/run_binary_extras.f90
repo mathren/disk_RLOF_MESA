@@ -99,7 +99,7 @@
       integer function how_many_extra_binary_history_columns(binary_id)
          use binary_def, only: binary_info
          integer, intent(in) :: binary_id
-         how_many_extra_binary_history_columns = 6
+         how_many_extra_binary_history_columns = 5
       end function how_many_extra_binary_history_columns
 
 
@@ -122,8 +122,7 @@
          names(2) = 'mdot_L2'
          names(3) = 'extra_jdot'
          names(4) = 'jdot_acc'
-         names(5) = 'jdot_donor'
-         names(6) = 'jdot_L2'
+         names(5) = 'jdot_L2'
          if (b% accretion_mode /= 2) then ! no disk
             vals(1) = 0.0d0
             vals(2) = 0.0d0
@@ -140,15 +139,13 @@
          end if
          vals(3) = b% extra_jdot
          vals(4) = b% s_accretor% accreted_material_j
-         vals(5) = b% s_donor% accreted_material_j
-
          ! recalculate L2 loss, may differ from extra_jdot for AM not accreted when disk accretion
          log_q = log10(b% s_accretor% m(1)/ b% s_donor% m(1))
-        ! position of L2 w.r.t. center of mass according to Lu et al. 23 fit in units of separation
-        xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! xL2 = rL2/a
-        omega_orb = 2*pi/b% period ! 1/sec
-        vals(6) = ((b% mtransfer_rate * fL2)) * g_b * & ! amount of mass lost at L2, note that mtransfer_rate is negative
-             omega_orb * pow2(b% separation) * pow2(xL2-b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1)))
+         ! position of L2 w.r.t. center of mass according to Lu et al. 23 fit in units of separation
+         xL2 = 0.0756_dp * log_q**2 - 0.424_dp * abs(log_q) + 1.699_dp  ! xL2 = rL2/a
+         omega_orb = 2*pi/b% period ! 1/sec
+         vals(5) = ((b% mtransfer_rate * fL2)) * g_b * & ! amount of mass lost at L2, note that mtransfer_rate is negative
+              omega_orb * pow2(b% separation) * pow2(xL2-b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1)))
        end subroutine data_for_extra_binary_history_columns
 
 
