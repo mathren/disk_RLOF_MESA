@@ -30,9 +30,9 @@ def get_total_mass(bin_hfile):
 if __name__ == "__main__":
     fig = plt.figure()
     gs = gridspec.GridSpec(150, 150)
-    ax1 = fig.add_subplot(gs[:, :50])
-    ax2 = fig.add_subplot(gs[:, 50:100])
-    ax3 = fig.add_subplot(gs[:, 100:])
+    ax1 = fig.add_subplot(gs[:45,:])
+    ax2 = fig.add_subplot(gs[55:100,:])
+    ax3 = fig.add_subplot(gs[105:,:])
     bx1 = ax1.twinx()
     root = "../MESA_Setup/20_18_100/"
     bin_hfile = root+'binary_history.data'
@@ -47,10 +47,13 @@ if __name__ == "__main__":
     ax1.plot(time, fL2)
     ax2.plot(time, mdot_L2)
     ax3.plot(time, extra_jdot)
-    ax2.plot(time, mdot_L2)
+
     bx1.plot(time, accretion_mode, c='C2')
+
     bx1.set_ylabel(r"Accretion mode", color='C2')
     ax1.set_ylabel(r"$\log_{10}(f_{L2})$")
+    ax2.set_ylabel(r"$\log_{10}(\dot{M}_{L2}/[M_{\odot}\ yr^{-1}])$")
+    ax3.set_ylabel(r"$\log_{10}(\dot{j}/[\mathrm{cm^{2} \ s^{-1}}])$")
     ax1.set_yscale('log')
     # J_tot = get_total_AM(bin_hfile, h1)
 
