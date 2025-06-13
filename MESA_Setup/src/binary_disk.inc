@@ -581,8 +581,9 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      b% xtra(1) = j_acc_disk
      b% xtra(2) = j_interp
      print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
-  ! else if (b% accretion_mode == 3) then
-  ! implement what jdot to use for direct impact at critical rotation
+  else if (b% accretion_mode == 3) then
+     ! implement what jdot to use for direct impact at critical rotation
+     b% accretor% accreted_material_j = j_acc_crit
   end if
      ! fix ratio to Keplerian
   b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
