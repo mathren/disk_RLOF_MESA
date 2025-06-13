@@ -476,7 +476,7 @@ subroutine L2_mdot(binary_id, ierr)
   ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
   if (b% r(b% a_i) < min_r) then
      b% accretion_mode = 2 ! means there is a disk
-     print *, "There is a disk!"
+     ! print *, "There is a disk!"
      disk_alpha = 0.1d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
           b% s_accretor% m(1)/Msun, &
@@ -486,10 +486,10 @@ subroutine L2_mdot(binary_id, ierr)
           b% s_donor% mu(1), &
           fL2, ierr)
   else
-     print *, "Direct impact!"
+     ! print *, "Direct impact!"
      if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
         b% accretion_mode = 3 ! 3 means there is a decretion disk
-        print *, "and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+        ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
      else
         ! direct impact, no disk, no update to fL2
         b% accretion_mode = 1
@@ -544,7 +544,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      write(*,*) 'failed in binary_ptr'
      return
   end if
-  print *, "in disk_accreted_material_j"
+
   if (b% rl_relative_gap(b% d_i) < 0) then
      ! no RLOF ongoing
      return
@@ -577,16 +577,16 @@ subroutine disk_accreted_material_j(binary_id, ierr)
              (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
              (b%x_ctrl(2) - b%x_ctrl(1)))))
      end if
-     print *, "is j_interp>j_acc_disk", j_interp > j_acc_disk
      b% s_accretor% accreted_material_j = j_interp
-     b% xtra(1) = j_acc_disk
-     b% xtra(2) = j_interp
-     print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
   else if (b% accretion_mode == 3) then
      ! implement what jdot to use for direct impact at critical rotation
-     b% s_accretor% accreted_material_j = j_acc_crit
+     b% s_accretor% accreted_material_j = j_acc_crit ! assume no AM accretion
   end if
-     ! fix ratio to Keplerian
+  ! save for reuse later
+  b% xtra(1) = j_acc_disk
+  b% xtra(2) = b% s_accretor% accreted_material_j
+  print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
+  ! fix ratio to Keplerian
   b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
           sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
 end subroutine disk_accreted_material_j
@@ -613,10 +613,10 @@ subroutine L2_extra_jdot(binary_id, ierr)
   L2_am_loss_rate = 0.0d0
   disk_torque_on_orbit = 0.0d0
 
-  if (b% accretion_mode /= 2) then
+  if (b% accretion_mode == 1) then
      ! no disk, no extra torque
      return
-  else
+  else if (b% accretion_mode == 2) then
      ! disk
      disk_alpha = 0.1d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
@@ -643,12 +643,21 @@ subroutine L2_extra_jdot(binary_id, ierr)
                                           ! if negative, assume it goes in the secondary accretion disk, and feed it
                                           ! back to the orbit
         print *, "delta_j", delta_j
-        if (delta_j <= 0.0) then
+        if (delta_j < 0.0) then
            ! accretor accreted less less AM than Keplerian
            b% extra_jdot = L2_am_loss_rate - delta_j/b% s_donor% dt ! delta_j is negative, -delta_j/timestep is a positive torque
         else
            ! accretor got >= keplerian, nothing to add
            b% extra_jdot = L2_am_loss_rate
+        end if
+     else if (b% accretion_mode == 3) then
+        ! direct impact on presumed decretion disk
+        if (b% xtra(2) - b% xtra(1) < 0.0d0) then
+           ! take AM not going in the accretor and put it back in the orbit
+           b% extra_jdot = abs(b% xtra(2) - b% xtra(1))
+        else
+           ! accretor ate AM
+           return
         end if
      end if
   end if
