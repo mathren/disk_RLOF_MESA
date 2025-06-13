@@ -650,15 +650,15 @@ subroutine L2_extra_jdot(binary_id, ierr)
            ! accretor got >= keplerian, nothing to add
            b% extra_jdot = L2_am_loss_rate
         end if
-     else if (b% accretion_mode == 3) then
-        ! direct impact on presumed decretion disk
-        if (b% xtra(2) - b% xtra(1) < 0.0d0) then
-           ! take AM not going in the accretor and put it back in the orbit
-           b% extra_jdot = abs(b% xtra(2) - b% xtra(1))
-        else
-           ! accretor ate AM
-           return
-        end if
+     end if
+  else if (b% accretion_mode == 3) then
+     ! direct impact on presumed decretion disk
+     if (b% xtra(2) - b% xtra(1) < 0.0d0) then
+        ! take AM not going in the accretor and put it back in the orbit
+        b% extra_jdot = abs(b% xtra(2) - b% xtra(1))
+     else
+        ! accretor ate AM
+        return
      end if
   end if
   print *, "extra_jdot = ", b% extra_jdot
