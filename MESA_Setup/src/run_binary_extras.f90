@@ -67,23 +67,9 @@
          b% warn_binary_extra =.false.
 
          ! point to function defined in binary_disk.inc
-         ! or undo "ose_other*"
-         if (b% x_logical_ctrl(1)) then
-            b% other_accreted_material_j => disk_accreted_material_j
-            b% other_extra_jdot => L2_extra_jdot
-         else
-            print *, "x_logical_ctrl(1) is set to false in inlist_binary: assume Lubow & Shu for accretion"
-            b% do_j_accretion = .true.
-            b% use_other_accreted_material_j = .false.
-            b% use_other_extra_jdot          = .false.
-         end if
-
-         if (b% x_logical_ctrl(2)) then
-            b% other_adjust_mdots => L2_adjust_mdots
-         else
-            print *, "x_logical_ctrl(2) is set to false in inlist_binary: assume conservative and rotationally limited accretion, no L2 mass loss"
-            b% use_other_adjust_mdots = .false.
-         end if
+         b% other_accreted_material_j => disk_accreted_material_j
+         b% other_extra_jdot => L2_extra_jdot
+         b% other_adjust_mdots => L2_adjust_mdots
 
       end subroutine extras_binary_controls
 

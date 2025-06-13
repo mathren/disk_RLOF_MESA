@@ -410,125 +410,14 @@ end subroutine Bondi_Hoyle_wind_transfer
 ! ----------------------------------------------------------------------------------------------
 ! The magic happens down here
 
-! other_adjust_mdots
-subroutine L2_adjust_mdots(binary_id, ierr)
-  use binary_def, only : binary_info, binary_ptr
-  ! use binary_wind, only: eval_wind_xfer_fractions
-  use const_def, only: dp,  standard_cgrav
-  real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
-  integer, intent(in) :: binary_id
-  integer, intent(out) :: ierr
-  real(dp) :: fL2, disk_alpha, actual_mtransfer_rate
-  type (binary_info), pointer :: b
-  ierr = 0
-  call binary_ptr(binary_id, b, ierr)
-  if (ierr /= 0) then
-     write(*,*) 'failed in binary_ptr'
-     return
-  end if
-
-  ! initialize
-  actual_mtransfer_rate = 0d0
-  fL2 = 0.0d0
-
-  if (b% point_mass_i /= 0) then
-     STOP "L2 mass loss not implemented for point accretors!"
-  end if
-
-  if (b% rl_relative_gap(b% d_i) < 0) then
-     ! no RLOF ongoing
-     return
-  end if
-
-  b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
-       b% mass_transfer_delta
-
-  ! turn off Eddington limit for non-compact objects
-  b% mdot_edd = 0.0d0
-  b% mdot_edd_eta = 0d0
-  ! solve wind mass transfer
-  ! b% mdot_wind_transfer(b% d_i) is a negative number that gives the
-  ! amount of mass transferred by unit time from the donor to the
-  ! accretor.
-  call eval_wind_xfer_fractions(b% binary_id, ierr)
-  if (ierr/=0) then
-     write(*,*) "Error in eval_wind_xfer_fractions"
-     return
-  end if
-
-  ! remove wind fractions
-  b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
-       b% wind_xfer_fraction(b% d_i)
-  b% mdot_wind_transfer(b% a_i) = b% s_accretor% mstar_dot * &
-       b% wind_xfer_fraction(b% a_i)
-
-
-  ! -----------------------------------------------------------------------
-  ! Set mdot for the donor
-  b% s_donor% mstar_dot = b% s_donor% mstar_dot + b% mtransfer_rate - &
-       b% mdot_wind_transfer(b% a_i)
-  ! -----------------------------------------------------------------------
-
-  ! -----------------------------------------------------------------------
-  ! Set mdot for accretor
-  ! First, check for disk
-  min_r = get_min_r(binary_id)
-  ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
-  if (b% r(b% a_i) < min_r) then
-     b% accretion_mode = 2 ! means there is a disk
-     ! print *, "There is a disk!"
-     disk_alpha = 0.1d0
-     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-          b% s_accretor% m(1)/Msun, &
-          b% mtransfer_rate/(Msun/secyer), &
-          b% separation/Rsun, &
-          disk_alpha, &
-          b% s_donor% mu(1), &
-          fL2, ierr)
-  else
-     ! print *, "Direct impact!"
-     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
-        b% accretion_mode = 3 ! 3 means there is a decretion disk
-        ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-     else
-        ! direct impact, no disk, no update to fL2
-        b% accretion_mode = 1
-     end if
-  end if
-
-  ! turn off accretion luminosity for non-compact stars
-  b% accretion_luminosity = 0.0d0
-
-  ! modify L2 mass loss value:
-  b% s_accretor% mstar_dot = (1.0d0-fL2) * b% s_accretor% mstar_dot - &
-       b% mtransfer_rate*b% fixed_xfer_fraction - b% mdot_wind_transfer(b% d_i)
-  ! -----------------------------------------------------------------------
-
-  if (b% x_logical_ctrl(2) .eqv. .true.) then
-     ! now deal with angular momentum
-     call b% other_accreted_material_j(b% binary_id, ierr)
-  end if
-
-  ! Finally adjust all mdots
-
-  ! mdot_system_transfer is mass lost from the vicinity of each star
-  ! due to inefficient rlof mass transfer, mdot_system_cct is mass lost
-  ! from a circumbinary coplanar toroid.
-  b% mdot_system_transfer(b% d_i) = b% mtransfer_rate * b% mass_transfer_alpha
-
-  ! combine RLOF and winds
-  actual_mtransfer_rate = b% mtransfer_rate * (1.0d0-fL2) * b% fixed_xfer_fraction + &
-       b% mdot_wind_transfer(b% d_i) !defined negative
-  b% component_mdot(b% a_i) = -actual_mtransfer_rate
-
-  b% mdot_system_cct = b% mtransfer_rate * b% mass_transfer_delta
-
-  b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
-       + b% mtransfer_rate * b% mass_transfer_beta
-end subroutine L2_adjust_mdots
-
-
 ! other_accreted_material_j
+! This routine implements a simplified version of the solution
+! for the boundary layer between an accretor star and an accretion disk
+! following Paczsynski 1991. As the accretor approaches critical rotation
+! the amount of accreted specific angular momentum (w.r.t. the center of
+! the accretor) goes from the Keplerian surface value sqrt(GM2R2) to zero.
+! For rotation approaching critical a smooth tanh interpolation is
+! used between the two values
 subroutine disk_accreted_material_j(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
   use const_def, only: dp
@@ -542,11 +431,6 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   call binary_ptr(binary_id, b, ierr)
   if (ierr /= 0) then
      write(*,*) 'failed in binary_ptr'
-     return
-  end if
-
-  if (b% rl_relative_gap(b% d_i) < 0) then
-     ! no RLOF ongoing
      return
   end if
 
@@ -591,6 +475,123 @@ subroutine disk_accreted_material_j(binary_id, ierr)
           sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
 end subroutine disk_accreted_material_j
 
+
+
+
+! other_adjust_mdots
+! This routine implements the mass lost from the accretion disk following Lu et al. 2023
+! Based on an energetic argument, we calculate the fraction of the mass lost
+! by the donor that escapes through L2 and implement both the decrease in
+! accretion rate of the secondary and (with other_jdot) the loss of orbital AM
+subroutine L2_adjust_mdots(binary_id, ierr)
+  use binary_def, only : binary_info, binary_ptr
+  ! use binary_wind, only: eval_wind_xfer_fractions
+  use const_def, only: dp,  standard_cgrav
+  real(dp) :: qratio, min_r ! needed for reimplementation of UB76 fit to LS75
+  integer, intent(in) :: binary_id
+  integer, intent(out) :: ierr
+  real(dp) :: fL2, disk_alpha, actual_mtransfer_rate
+  type (binary_info), pointer :: b
+  ierr = 0
+  call binary_ptr(binary_id, b, ierr)
+  if (ierr /= 0) then
+     write(*,*) 'failed in binary_ptr'
+     return
+  end if
+
+  ! initialize
+  actual_mtransfer_rate = 0d0
+  fL2 = 0.0d0
+
+  b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
+       b% mass_transfer_delta
+
+  ! turn off Eddington limit for non-compact objects
+  b% mdot_edd = 0.0d0
+  b% mdot_edd_eta = 0d0
+  ! solve wind mass transfer
+  ! b% mdot_wind_transfer(b% d_i) is a negative number that gives the
+  ! amount of mass transferred by unit time from the donor to the
+  ! accretor.
+  call eval_wind_xfer_fractions(b% binary_id, ierr)
+  if (ierr/=0) then
+     write(*,*) "Error in eval_wind_xfer_fractions"
+     return
+  end if
+
+  ! remove wind fractions
+  b% mdot_wind_transfer(b% d_i) = b% s_donor% mstar_dot * &
+       b% wind_xfer_fraction(b% d_i)
+  b% mdot_wind_transfer(b% a_i) = b% s_accretor% mstar_dot * &
+       b% wind_xfer_fraction(b% a_i)
+
+
+  ! -----------------------------------------------------------------------
+  ! Set mdot for the donor
+  b% s_donor% mstar_dot = b% s_donor% mstar_dot + b% mtransfer_rate - &
+       b% mdot_wind_transfer(b% a_i) ! accretion from the wind of the accretor
+  ! -----------------------------------------------------------------------
+
+  ! -----------------------------------------------------------------------
+  ! Set mdot for accretor
+  ! First, check for disk
+  min_r = get_min_r(binary_id)
+  ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
+  if (b% r(b% a_i) < min_r) then
+     b% accretion_mode = 2 ! means there is a disk
+     ! print *, "There is a disk!"
+     disk_alpha = 0.1d0
+     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+          b% s_accretor% m(1)/Msun, &
+          b% mtransfer_rate/(Msun/secyer), &
+          b% separation/Rsun, &
+          disk_alpha, &
+          b% s_donor% mu(1), &
+          fL2, ierr)
+  else
+     ! print *, "Direct impact!"
+     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
+        b% accretion_mode = 3 ! 3 means there is a decretion disk
+        ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+     else
+        ! direct impact, no disk, no update to fL2
+        b% accretion_mode = 1
+     end if
+  end if
+
+  ! turn off accretion luminosity for non-compact stars
+  b% accretion_luminosity = 0.0d0
+
+  ! modify L2 mass loss value:
+  b% s_accretor% mstar_dot = b% s_accretor% mstar_dot - &
+       b% mtransfer_rate*(b% fixed_xfer_fraction - fL2) - b% mdot_wind_transfer(b% d_i)
+  ! -----------------------------------------------------------------------
+
+  ! now deal with angular momentum
+  if (b% use_other_accreted_material_j .eqv. .true.) then
+     call b% other_accreted_material_j(b% binary_id, ierr)
+  else
+     call binary_eval_accreted_material_j(b% binary_id, ierr)
+  end if
+
+  ! Finally adjust all mdots
+
+  ! mdot_system_transfer is mass lost from the vicinity of each star
+  ! due to inefficient rlof mass transfer, mdot_system_cct is mass lost
+  ! from a circumbinary coplanar toroid.
+  b% mdot_system_transfer(b% d_i) = b% mtransfer_rate * b% mass_transfer_alpha
+
+  ! combine RLOF and winds
+  actual_mtransfer_rate = b% mtransfer_rate * (b% fixed_xfer_fraction - fL2) + &
+       b% mdot_wind_transfer(b% d_i) !defined negative
+  b% component_mdot(b% a_i) = -actual_mtransfer_rate
+
+  b% mdot_system_cct = b% mtransfer_rate * b% mass_transfer_delta
+
+  b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
+       + b% mtransfer_rate * b% mass_transfer_beta
+end subroutine L2_adjust_mdots
+
 ! other_extra_jdot
 subroutine L2_extra_jdot(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
@@ -613,7 +614,7 @@ subroutine L2_extra_jdot(binary_id, ierr)
   L2_am_loss_rate = 0.0d0
   ! disk_torque_on_orbit = 0.0d0
 
-  if ((b% accretion_mode == 1) .or. (b% accretion_mode == 3)) then
+  if ((b% accretion_mode == 1)) then
      ! no disk, no extra torque
      return
   else if (b% accretion_mode == 2) then
@@ -652,8 +653,11 @@ subroutine L2_extra_jdot(binary_id, ierr)
         ! end if
         b% extra_jdot = L2_am_loss_rate
      end if
+    else if (b% accretion_mode == 3) then
+       ! decretion disk and direct hit, treat decretion disk like accretion disk
+       return
+    end if
   end if
-  ! overwrite for testing
-  if (b% x_logical_ctrl(1) .eqv. .false.) b% extra_jdot = 0
+
   print *, "extra_jdot = ", b% extra_jdot
 end subroutine L2_extra_jdot
