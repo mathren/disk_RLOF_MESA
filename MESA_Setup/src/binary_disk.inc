@@ -163,6 +163,9 @@ subroutine eval_L2_mass_loss_fraction(donor_mass, accretor_mass, mass_transfer_r
   if (the < the_max) then
      ! return a tiny numner
      fL2 = eps_small
+  else if (mass_transfer_rate < eps_small) then
+     ! no mass transfer, so no L2 mass loss
+     fL2 = 0.0_dp
   else
      the_min = ( 0.5_dp * sqrt((PhiL2 - PhiRd) / (GM2 / Rd) - 0.5_dp) )  ! corresponding to fL2=1, T=0
      ! need to find the maximum corresponding to fL2=0
@@ -558,7 +561,6 @@ subroutine L2_adjust_mdots(binary_id, ierr)
           disk_alpha, &
           b% s_donor% mu(1), &
           fL2, ierr)
-     fL2 = max(fl2, 1d-98) ! enforce minimum
      print *, "FL2 in adjust mass", fL2
   else
      ! print *, "Direct impact!"
@@ -638,7 +640,6 @@ subroutine L2_extra_jdot(binary_id, ierr)
           disk_alpha, &
           b% s_donor% mu(1), &
           fL2, ierr)
-     fL2 = max(fl2, 1d-98) ! enforce minimum
      print *, "FL2 extra_jdot=", fL2
      ! there is a disk and there is L2 mass loss
      log_q = log10(b% s_accretor% m(1)/ b% s_donor% m(1))

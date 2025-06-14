@@ -1,7 +1,13 @@
 #!/bin/bash
 
-rm -f .restart
+{
+    rm -f .restart
 
-date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
-./binary
-date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
+    date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
+    ./binary
+    date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
+} 2>&1 | tee output.txt ;
+
+# try to find last png
+png=$(find  -path "./png/single*.png" -printf "%T@ %P\n" | sort -n | tail -1 | awk '{print $2}') ;
+tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" mrenzo@arizona.edu
