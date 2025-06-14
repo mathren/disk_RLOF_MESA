@@ -504,7 +504,7 @@ subroutine L2_adjust_mdots(binary_id, ierr)
 
   ! initialize
   actual_mtransfer_rate = 0d0
-  fL2 = 0.0d0
+  ! fL2 = 0.0d0
 
   b% fixed_xfer_fraction = 1 - b% mass_transfer_alpha - b% mass_transfer_beta - &
        b% mass_transfer_delta
@@ -613,7 +613,7 @@ subroutine L2_extra_jdot(binary_id, ierr)
   end if
   ! initialize
   b% extra_jdot = 0.0d0
-  fL2 = 0.0d0
+  ! fL2 = 0.0d0
   L2_am_loss_rate = 0.0d0
   ! disk_torque_on_orbit = 0.0d0
 

@@ -54,3 +54,7 @@ Output: $\dot{M}_2$, $\dot{J}_2$
 -   `mod_other_binary_jdot.f90`
 
 see also `MESA_setup/src/binary_disk.inc` and `MESA_setup/src/run_binary_extras.f90`.
+
+## Branches
+
+- `default` contains a run without any custom implementation of L2 mass loss nor angular momentum accretion
