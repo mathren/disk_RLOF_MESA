@@ -54,3 +54,9 @@ Output: $\dot{M}_2$, $\dot{J}_2$
 -   `mod_other_binary_jdot.f90`
 
 see also `MESA_setup/src/binary_disk.inc` and `MESA_setup/src/run_binary_extras.f90`.
+
+## Customization
+
+`./rn` and `./re` can be called with an email as an argument and, if
+`mail` is properly configured, MESA will send you and email with the
+last 50 lines of the output and attached the last `pgstar` png saved.

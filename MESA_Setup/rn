@@ -9,5 +9,6 @@
 } 2>&1 | tee output.txt ;
 
 # try to find last png
-png=$(find  -path "./png/single*.png" -printf "%T@ %P\n" | sort -n | tail -1 | awk '{print $2}') ;
-tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" mrenzo@arizona.edu
+png=$(find  -path "./png/*.png" -printf "%T@ %P\n" | sort -n | tail -1 | awk '{print $2}') ;
+# if called with an argument, send that argument an email
+[[ -z "$1" ]] tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" $1
