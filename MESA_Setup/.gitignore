@@ -11,6 +11,3 @@ restart_photo
 *..npy
 *#*
 *.mp4
-! ignore custom scripts that email results
-rn
-re

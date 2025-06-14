@@ -547,7 +547,8 @@ subroutine L2_adjust_mdots(binary_id, ierr)
      b% accretion_mode = 2 ! means there is a disk
      ! print *, "There is a disk!"
      disk_alpha = 0.1d0
-     print *, "input", b% s_donor% m(1)/Msun, &
+     print *, "input:", &
+          b% s_donor% m(1)/Msun, &
           b% s_accretor% m(1)/Msun, &
           b% mtransfer_rate/(Msun/secyer), &
           b% separation/Rsun, &
@@ -561,7 +562,6 @@ subroutine L2_adjust_mdots(binary_id, ierr)
           disk_alpha, &
           b% s_donor% mu(1), &
           fL2, ierr)
-     print *, "FL2 in adjust mass", fL2
   else
      ! print *, "Direct impact!"
      if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
@@ -604,6 +604,8 @@ subroutine L2_adjust_mdots(binary_id, ierr)
 
   b% mdot_system_transfer(b% a_i) = (actual_mtransfer_rate + b% component_mdot(b% a_i)) &
        + b% mtransfer_rate * b% mass_transfer_beta
+  print *, "fL2:", fL2
+  print *, "donor mdot", b% s_donor% mstar_dot, "accretor mdot", b% s_accretor% mstar_dot
 end subroutine L2_adjust_mdots
 
 ! other_extra_jdot
@@ -640,7 +642,6 @@ subroutine L2_extra_jdot(binary_id, ierr)
           disk_alpha, &
           b% s_donor% mu(1), &
           fL2, ierr)
-     print *, "FL2 extra_jdot=", fL2
      ! there is a disk and there is L2 mass loss
      log_q = log10(b% s_accretor% m(1)/ b% s_donor% m(1))
      ! position of L2 w.r.t. center of mass according to Lu et al. 23 fit in units of separation
