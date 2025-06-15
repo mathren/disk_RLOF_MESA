@@ -131,6 +131,10 @@ overshoot_f0(1)                         = 0.001d0
 ! logT_max_for_min_xa_hard_limit            = 8.75d0
 ! logT_min_for_min_xa_hard_limit_for_highT  = 9.0d0
 
+! stop at He depletion
+xa_central_lower_limit_species(1) = 'h4'
+xa_central_lower_limit(1) = 1d-4
+
 ! rotation and mixing:
 am_nu_ST_factor                           = 1.0d0
 D_visc_factor                             = 0.0d0
