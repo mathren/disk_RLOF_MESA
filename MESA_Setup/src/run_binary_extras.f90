@@ -169,8 +169,6 @@
             STOP "interp values"
          end if
 
-         print *, "accretion mode", b% accretion_mode
-
          extras_binary_startup = keep_going
       end function  extras_binary_startup
 
@@ -185,6 +183,7 @@
             return
          end if
 
+         print *, "accretion mode", b% accretion_mode
       end function  extras_binary_start_step
 
       !Return either keep_going, retry or terminate

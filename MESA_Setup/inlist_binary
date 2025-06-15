@@ -21,14 +21,14 @@ initial_period_in_days        = 100d0
 ! way winds are setup for the accretor, this gives rotationally
 ! limited accretion efficiency.
 ! Set it to .true. to approximate Paczynski 1991 boundary layer solution
-use_other_accreted_material_j = .false.
-do_j_accretion                = .true. ! cannot be used together with use_other_accreted_material_j, reimplemented
+use_other_accreted_material_j = .true.
+do_j_accretion                = .false. ! cannot be used together with use_other_accreted_material_j, reimplemented
 
 ! Set use_other_adjust_mdots to .false. to NOT have mass loss from L2 as
 ! in Lu et al. 2023
-use_other_adjust_mdots        = .true.
+use_other_adjust_mdots        = .false.
 ! Set use_other_extra_jdot to .false. to NOT account for orbital AM loss from L2
-use_other_extra_jdot          = .true.
+use_other_extra_jdot          = .false.
 
 ! Note: false true true true gives a segfault
 !       false true false false true works but give infty and nan
