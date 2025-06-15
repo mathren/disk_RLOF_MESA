@@ -26,12 +26,9 @@ do_j_accretion                = .false. ! cannot be used together with use_other
 
 ! Set use_other_adjust_mdots to .false. to NOT have mass loss from L2 as
 ! in Lu et al. 2023
-use_other_adjust_mdots        = .false.
+use_other_adjust_mdots        = .true.
 ! Set use_other_extra_jdot to .false. to NOT account for orbital AM loss from L2
-use_other_extra_jdot          = .false.
-
-! Note: false true true true gives a segfault
-!       false true false false true works but give infty and nan
+use_other_extra_jdot          = .true.
 
 ! When using use_other_accreted_material_j use the following
 ! to interpolate using omega/omega_crit of the accretor
