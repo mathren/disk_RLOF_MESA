@@ -10,8 +10,8 @@ pgbinary_flag                 = .true.
 &binary_controls
 
 m1                            = 20.0d0  ! donor mass in Msun
-m2                            = 18.0d0 ! companion mass in Msun
-initial_period_in_days        = 100d0
+m2                            = 15.0d0 ! companion mass in Msun
+initial_period_in_days        = 300d0
 
 ! -----------------------------------------------------------------
 ! add custom routines

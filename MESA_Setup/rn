@@ -1,6 +1,6 @@
 #!/bin/bash
 
-{
+{ # log errors too
     rm -f .restart
 
     date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
@@ -8,7 +8,12 @@
     date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"
 } 2>&1 | tee output.txt ;
 
-# try to find last png
 png=$(find  -path "./png/*.png" -printf "%T@ %P\n" | sort -n | tail -1 | awk '{print $2}') ;
 # if called with an argument, send that argument an email
-[[ -z "$1" ]] tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" $1
+if [ $# -eq 0 ]; then
+    echo "Done, sending email to arizona"
+    tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" mrenzo@arizona.edu
+else
+    # try to find last png
+    tail -n 50 output.txt | mail -A $png -a "From:simulations@arizona.edu" -s "BIN done" $1
+fi
