@@ -547,14 +547,14 @@ subroutine L2_adjust_mdots(binary_id, ierr)
      b% accretion_mode = 2 ! means there is a disk
      ! print *, "There is a disk!"
      disk_alpha = 0.1d0
-     print *, "input:", &
-          b% s_donor% m(1)/Msun, &
-          b% s_accretor% m(1)/Msun, &
-          b% mtransfer_rate/(Msun/secyer), &
-          b% separation/Rsun, &
-          disk_alpha, &
-          b% s_donor% mu(1), &
-          fL2, ierr
+     ! print *, "input:", &
+     !      b% s_donor% m(1)/Msun, &
+     !      b% s_accretor% m(1)/Msun, &
+     !      b% mtransfer_rate/(Msun/secyer), &
+     !      b% separation/Rsun, &
+     !      disk_alpha, &
+     !      b% s_donor% mu(1), &
+     !      fL2, ierr
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
           b% s_accretor% m(1)/Msun, &
           b% mtransfer_rate/(Msun/secyer), &
@@ -613,11 +613,11 @@ end subroutine L2_adjust_mdots
 ! other_extra_jdot
 subroutine L2_extra_jdot(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
-  use const_def, only: dp, pi
+  use const_def, only: dp, pi, standard_cgrav
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
   real(dp) :: fL2, disk_alpha, xL2, log_q, omega_orb
-  real(dp) :: L2_am_loss_rate
+  real(dp) :: L2_am_loss_rate, min_r
   real(dp), parameter  :: g_b = 1.0d0
   type (binary_info), pointer :: b
   ierr = 0
@@ -633,9 +633,11 @@ subroutine L2_extra_jdot(binary_id, ierr)
   ! disk_torque_on_orbit = 0.0d0
   print *, "b% accretion_mode", b% accretion_mode, b% mtransfer_rate
 
-
-  if (b% accretion_mode == 2) then
-     ! disk (accretion if 2, decretion+direct impact if 3)
+  if (b% accretion_mode == 1) then
+     ! direct impact, no disk, no L2 mass loss
+     b% extra_jdot = 0.0d0
+  else if (b% accretion_mode == 2) then
+     ! accretion disk
      disk_alpha = 0.1d0
      call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
           b% s_accretor% m(1)/Msun, &
@@ -652,20 +654,13 @@ subroutine L2_extra_jdot(binary_id, ierr)
         ! add AM loss from L2, see Eq. 36 in Lu et al. 2023
      L2_am_loss_rate = ((b% s_donor%mstar_dot * fL2)) * g_b * & ! amount of mass lost at L2, note that mstar_dot is negative
           omega_orb * pow2(b% separation) * pow2(xL2-(b% s_accretor% m(1) / (b%s_accretor% m(1)+ b% s_donor% m(1))))
-     ! print *, "L2 am loss", L2_am_loss_rate
-     ! delta_j = b% xtra(2) - b% xtra(1) ! accreted by secondary minus Keplerian at secondary surface
-     !                                   ! if negative, assume it goes in the secondary accretion disk, and feed it
-     !                                   ! back to the orbit
-     ! print *, "delta_j", delta_j
-     ! if (delta_j < 0.0) then
-     !    ! accretor accreted less less AM than Keplerian
-     !    b% extra_jdot = L2_am_loss_rate - delta_j/b% s_donor% dt ! delta_j is negative, -delta_j/timestep is a positive torque
-     ! else
-        !    ! accretor got >= keplerian, nothing to add
-     !    b% extra_jdot = L2_am_loss_rate
-     ! end if
      b% extra_jdot = L2_am_loss_rate
+  else if (b% accretion_mode == 3) then
+     ! assume decretion disk (omega2> x_ctrl(1) ~0.75 ~ Be stars) + direct impact
+     ! assume no L2 mass loss?
+     b% extra_jdot = 0.0d0
   end if
 
+  print *, "accretion mode=", b% accretion_mode
   print *, "extra_jdot = ", b% extra_jdot
 end subroutine L2_extra_jdot

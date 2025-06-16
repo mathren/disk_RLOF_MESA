@@ -183,7 +183,15 @@
             return
          end if
 
-         print *, "accretion mode", b% accretion_mode
+        !  if (b% rl_relative_gap(1) >= 0.0d0) then
+        !     ! MLT++ full on during MT
+        !    b% s_donor% gradT_excess_lambda1 = -1.0d0
+        !    b% s_accretor% gradT_excess_lambda1 = -1.0d0
+        ! else
+        !    !MLT++ defaults when not MT
+        !    b% s_donor% gradT_excess_lambda1 = 1.0d0
+        !    b% s_accretor% gradT_excess_lambda1 = 1.0d0
+        ! end if
       end function  extras_binary_start_step
 
       !Return either keep_going, retry or terminate
