@@ -60,7 +60,7 @@ energy_eqn_option                          = 'dedt'
 include_composition_in_eps_grav            = .true.
 !use_superad_reduction                     = .true.
 okay_to_reduce_gradT_excess                = .true.
-! gradT_excess_lambda1                       = -1d0 ! full on
+gradT_excess_lambda1                       = -1d0 ! full on
 
 !atmosphere
 atm_option                                 = 'T_tau'

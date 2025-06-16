@@ -1,0 +1,33 @@
+#+title: Notes on MESA runs
+
+On separate branches we have:
+
+** =default=
+
+Follows Ulirch & Burger 1976 fit to Lubow & Shu 1975 to determine
+direct impact or disk accretion (no boundary layer, no L_{2} mass loss).
+No =MLT++=.
+
+** =disk_acc_no_L_{2}=
+
+Follows Paczynski+1991 boundary layer accretion. at critical rotation
+assumes material comes with j=0, still rotationally enhanced winds.
+No =MLT++=, no L_{2} losses.
+
+Separation and period post-RLOF very similar to above. M_{2} larger post RLOF.
+
+** =L_2_an_paczynski=
+
+Follows Paczynski+1991 boundary layer accretion. at critical rotation
+assumes material comes with j=0, still rotationally enhanced winds.
+Uses full on =MLT++= and L_{2} mass loss following Lu et al. 2023.
+
+Higher AM loss through L_{2} drive higher mass transfer rates.
+Crashes/unphysical behavior without =MLT++=. Higher mass transfer and
+accretion rate seem to cause initial deviation in orbit.
+
+** TODO runs to do
+
+- [ ] =default= + =MLT++= full on
+- [ ] =disk_acc_no_L_2= + =MLT++= full on
+- [ ] rename =*paczynski= to =BL= for "boundary layer"
