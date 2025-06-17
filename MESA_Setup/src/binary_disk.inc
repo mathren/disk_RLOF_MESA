@@ -13,8 +13,8 @@ subroutine eval_L2_mass_loss_fraction(donor_mass, accretor_mass, mass_transfer_r
   ! constants
   use const_def, only: dp, pi, pi2, one_third, two_thirds, standard_cgrav, Msun, Rsun, secyer, crad, boltzm, clight, mp
   real(dp), parameter :: one_fourth = 1.0_dp / 4.0_dp
-  real(dp), parameter :: one_eigth = 1.0_dp / 8.0_dp
-  real(dp), parameter :: three_eigths = 3.0_dp / 8.0_dp
+  real(dp), parameter :: one_eighth = 1.0_dp / 8.0_dp
+  real(dp), parameter :: three_eighths = 3.0_dp / 8.0_dp
   real(dp), parameter :: one_ninth = 1.0_dp / 9.0_dp
   real(dp), parameter :: four_twentyseventh = 4.0_dp / 27.0_dp
 
@@ -158,7 +158,7 @@ subroutine eval_L2_mass_loss_fraction(donor_mass, accretor_mass, mass_transfer_r
   ! solution
   the = 0.5_dp * (the_left + the_right)
   T = T_the_nofL2(the, logthe_grid, logT_arr, n_the, dlogthe)
-  the_max = sqrt(three_eigths * c2 * T + one_fourth * (PhiL2 - PhiRd) / (GM2 / Rd) - one_eigth)
+  the_max = sqrt(three_eighths * c2 * T + one_fourth * (PhiL2 - PhiRd) / (GM2 / Rd) - one_eighth)
 
   if (the < the_max) then
      ! return a tiny numner
@@ -189,8 +189,8 @@ subroutine eval_L2_mass_loss_fraction(donor_mass, accretor_mass, mass_transfer_r
 
      ! -- do not use exactly the_min (corresponding to T = 0, bc. kap table breaks down)
      ! -- define another the_min based on T_floor (kap table won't be a problem)
-     the_min = sqrt( three_eigths * c2 * T_floor &
-          + one_fourth * (PhiL2 - PhiRd) / (GM2 / Rd) - one_eigth )
+     the_min = sqrt( three_eighths * c2 * T_floor &
+          + one_fourth * (PhiL2 - PhiRd) / (GM2 / Rd) - one_eighth )
      the_left = the_min
      f2_left = f2_the_T_fL2(the_left, &
           T_the(the_left, c2, PhiL2, PhiRd, GM2, Rd), &
@@ -416,7 +416,7 @@ end subroutine Bondi_Hoyle_wind_transfer
 ! other_accreted_material_j
 ! This routine implements a simplified version of the solution
 ! for the boundary layer between an accretor star and an accretion disk
-! following Paczsynski 1991. As the accretor approaches critical rotation
+! following Paczynski 1991. As the accretor approaches critical rotation
 ! the amount of accreted specific angular momentum (w.r.t. the center of
 ! the accretor) goes from the Keplerian surface value sqrt(GM2R2) to zero.
 ! For rotation approaching critical a smooth tanh interpolation is
@@ -429,6 +429,8 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   integer, intent(out) :: ierr
   real(dp) :: min_r, omega_ratio_acc
   real(dp) :: j_acc_disk, j_acc_crit, j_interp
+  real(dp) :: omega_ratio_norm, omega_ratio_mid, j_mid, omega_ratio_diff, j_diff
+  
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -438,7 +440,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   end if
 
   ! use disk AM until a certain omega/omega_crit, then ramp up to zero quickly
-  ! this mimics qualitatively Paczinski 1991's solution
+  ! this mimics qualitatively Paczynski 1991's solution
   j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! specific Keplerian AM at accretor surface w.r.t. accretor
   j_acc_crit = 0.0d0 ! no AM accretion close to critical rotation, as per Paczynski's work
 
@@ -458,11 +460,13 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      else if (omega_ratio_acc >= b% x_ctrl(2)) then
         j_interp = j_acc_crit  ! null -- or implement a solution of Paczynski's idea with dependence on b% mtransfer_rate of b% s_accretor% mstar_dot
      else
-        j_interp = j_acc_disk + &
-             0.5d0*(j_acc_crit-j_acc_disk) * &
-             (1+tanh(b%x_ctrl(3)* &  ! tanh for smooth interpolation
-             (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
-             (b%x_ctrl(2) - b%x_ctrl(1)))))
+        omega_ratio_mid = 0.5d0 * (j_acc_disk + j_acc_crit)
+        omega_ratio_diff = j_acc_crit - j_acc_disk
+        j_mid = 0.5d0 * (b% x_ctrl(1) + b% x_ctrl(2))
+        j_diff = b% x_ctrl(2) - b% x_ctrl(1)
+        omega_ratio_norm = (omega_ratio_acc - omega_ratio_mid) / omega_ratio_diff
+
+        j_interp = (0.5d0 * j_diff * omega_ratio_norm * (3d0 - 4d0 * omega_ratio_norm * omega_ratio_norm) + j_mid)
      end if
      b% s_accretor% accreted_material_j = j_interp
   else if (b% accretion_mode == 3) then
