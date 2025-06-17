@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 x = np.linspace(0,1,1000)
 x0 = 0.75
 x1 = 0.9
-y0 = 1e31
+y0 = 1.0 # 1e31
 y1 = 0.0
 steepness = 10
 
@@ -25,6 +25,7 @@ ax.axvline(x0,0,1, color='g')
 ax.axvline(x1,0,1, color='r')
 ax.axhline(y0, 0,1)
 ax.axhline(y1, 0,1)
-ax.set_yscale('log')
+# ax.set_yscale('log')
+ax.set_xlabel(r'$\omega/\omega_\mathrm{crit}$')
 # ax.plot(x, (1-np.tanh(steepness*x))/2.0)
 plt.show()
