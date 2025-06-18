@@ -59,7 +59,7 @@ Zbase                                      = 0.02d0
 energy_eqn_option                          = 'dedt'
 include_composition_in_eps_grav            = .true.
 use_superad_reduction                      = .true.
-! superad_reduction_diff_grads_limit = 1d-2
+superad_reduction_diff_grads_limit         = 1d-2
 ! superad_reduction_limit = -1d0
 ! okay_to_reduce_gradT_excess                = .true.
 ! gradT_excess_lambda1                       = -1d0 ! full on
@@ -79,7 +79,7 @@ Dutch_scaling_factor                       = 1.0d0 ! 0.8 ! turn off winds for te
 mdot_omega_power                           = 0.43d0
 
 ! mixing
-MLT_option                                 = 'TDC'
+MLT_option                                 = 'Henyey'
 ! alpha_TDC_DAMP                           = 1d0
 ! alpha_TDC_DAMPR                          = 1d0
 ! alpha_TDC_PtdVdt                         = 1d0
@@ -89,7 +89,7 @@ mixing_length_alpha                        = 2.0d0
 ! min_convective_gap                         = 0.10
 alpha_semiconvection                       = 1.0d0
 thermohaline_coeff                         = 100.0d0
-! mlt_make_surface_no_mixing               = .true.
+mlt_make_surface_no_mixing               = .true.
 
 
 convergence_ignore_equL_residuals          = .true.
