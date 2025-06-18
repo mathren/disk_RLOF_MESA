@@ -530,7 +530,7 @@
       !v_div_csound_max ! max value of velocity divided by sound speed at face
       !v_div_vesc
       !v_phot_km_s
-      !v_surf_div_escape_v
+      v_surf_div_escape_v
 
       !v_surf_div_v_kh ! v_surf/(photosphere_r/kh_timescale)
 

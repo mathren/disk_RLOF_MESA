@@ -413,7 +413,7 @@ end subroutine Bondi_Hoyle_wind_transfer
 ! ----------------------------------------------------------------------------------------------
 ! The magic happens down here
 
-! other_accreted_material_j
+! other_accreted_material_j (for the accretor)
 ! This routine implements a simplified version of the solution
 ! for the boundary layer between an accretor star and an accretion disk
 ! following Paczsynski 1991. As the accretor approaches critical rotation
@@ -429,6 +429,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   integer, intent(out) :: ierr
   real(dp) :: min_r, omega_ratio_acc
   real(dp) :: j_acc_disk, j_acc_crit, j_interp
+  real(dp), parameter :: steepness = 10.0d0
   type (binary_info), pointer :: b
   ierr = 0
   call binary_ptr(binary_id, b, ierr)
@@ -460,19 +461,27 @@ subroutine disk_accreted_material_j(binary_id, ierr)
      else
         j_interp = j_acc_disk + &
              0.5d0*(j_acc_crit-j_acc_disk) * &
-             (1+tanh(b%x_ctrl(3)* &  ! tanh for smooth interpolation
-             (omega_ratio_acc - ((b%x_ctrl(1) + b%x_ctrl(2))/2.0) / &
-             (b%x_ctrl(2) - b%x_ctrl(1)))))
+             (1+tanh(steepness * ( &  ! tanh for smooth interpolation
+             omega_ratio_acc - &
+             (((b%x_ctrl(1) + b%x_ctrl(2))/2.0d0) &
+             / &
+             (b%x_ctrl(2) - b%x_ctrl(1))) &
+             )))
+        print *, "Interp", 0.5d0*(j_acc_crit-j_acc_disk) * &
+             (1+tanh(steepness * ( &  ! tanh for smooth interpolation
+             omega_ratio_acc - &
+             (((b%x_ctrl(1) + b%x_ctrl(2))/2.0d0) &
+             / &
+             (b%x_ctrl(2) - b%x_ctrl(1))) &
+             ))), "<= 0?"
+
      end if
      b% s_accretor% accreted_material_j = j_interp
   else if (b% accretion_mode == 3) then
      ! implement what jdot to use for direct impact at critical rotation
      b% s_accretor% accreted_material_j = j_acc_crit ! assume no AM accretion
   end if
-  ! save for reuse later
-  ! b% xtra(1) = j_acc_disk
-  ! b% xtra(2) = b% s_accretor% accreted_material_j
-  ! print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk
+  print *, "j_accreted_2 - j_keplerian2", b% s_accretor% accreted_material_j - j_acc_disk, "<= 0?"
   ! fix ratio to Keplerian
   b% acc_am_div_kep_am = b% s_accretor% accreted_material_j / &
           sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i))
@@ -567,9 +576,16 @@ subroutine L2_adjust_mdots(binary_id, ierr)
      if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
         b% accretion_mode = 3 ! 3 means there is a decretion disk
         ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+        print *, "Direct impact and fast rotating: Force accretion disk anyways"
+        print *, b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+        b% accretion_mode = 2
+        print *, b% accretion_mode
      else
         ! direct impact, no disk, no update to fL2
         b% accretion_mode = 1
+        print *, "Direct impact and slow rotating: Force accretion disk anyways"
+        print *, b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+        b% accretion_mode = 2
      end if
   end if
 
@@ -610,7 +626,7 @@ subroutine L2_adjust_mdots(binary_id, ierr)
 
 end subroutine L2_adjust_mdots
 
-! other_extra_jdot
+! other_extra_jdot (for the orbit)
 subroutine L2_extra_jdot(binary_id, ierr)
   use binary_def, only : binary_info, binary_ptr
   use const_def, only: dp, pi, standard_cgrav
