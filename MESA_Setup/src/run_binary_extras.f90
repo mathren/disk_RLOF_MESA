@@ -71,7 +71,7 @@
          b% other_extra_jdot => L2_extra_jdot
          b% other_adjust_mdots => L2_adjust_mdots
 
-      end subroutine extras_binary_controls
+       end subroutine extras_binary_controls
 
       integer function how_many_extra_binary_history_header_items(binary_id)
          use binary_def, only: binary_info
@@ -183,6 +183,8 @@
             return
          end if
 
+         print *,"start step accretion mode:", b% accretion_mode
+
         !  if (b% rl_relative_gap(1) >= 0.0d0) then
         !     ! MLT++ full on during MT
         !    b% s_donor% gradT_excess_lambda1 = -1.0d0
@@ -232,6 +234,8 @@
                call star_write_model(b% star_ids(2), fname, ierr)
                b% lxtra(2) = .true.
                b% lxtra_old(2) = .true.
+               ! debug
+               ! b% s_accretor% report_solver_progress  = .true.
             end if
          end if
 

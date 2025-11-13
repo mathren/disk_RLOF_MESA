@@ -19,8 +19,8 @@ initial_model_number                       = 0
 
 pgstar_flag                                = .true.
 
-change_v_flag                              = .true.
-new_v_flag                                 = .true.
+! change_v_flag                              = .true.
+! new_v_flag                                 = .true.
 
 change_initial_Z                           = .true.
 new_Z                                      = 0.02d0
@@ -88,9 +88,8 @@ use_ledoux_criterion                       = .true.
 mixing_length_alpha                        = 2.0d0
 ! min_convective_gap                         = 0.10
 alpha_semiconvection                       = 1.0d0
-thermohaline_coeff                         = 100.0d0
-mlt_make_surface_no_mixing               = .true.
-
+thermohaline_coeff                         = 1.0d0
+mlt_make_surface_no_mixing                = .true.
 
 convergence_ignore_equL_residuals          = .true.
 
@@ -101,6 +100,21 @@ overshoot_zone_loc(1)                      = 'core'
 overshoot_bdy_loc(1)                       = 'any'
 overshoot_f(1)                             = 4.25d-2
 overshoot_f0(1)                            = 0.001d0
+! overshoot_scheme(1) = 'other'
+! overshoot_zone_type(1) = 'any'
+! overshoot_zone_loc(1) = 'core'
+! overshoot_bdy_loc(1) = 'top'
+
+! overshoot_f0(1) = 0.005
+! overshoot_f(1) = 0.01
+
+! overshoot_scheme(2) = 'exponential'
+! overshoot_zone_type(2) = 'any'
+! overshoot_zone_loc(2) = 'any'
+! overshoot_bdy_loc(2) = 'top'
+
+! overshoot_f0(2) = 0.005
+! overshoot_f(2) = 0.01
 
 ! ! Brott+11
 ! overshoot_scheme(1)                      = 'step'
@@ -146,7 +160,7 @@ D_visc_factor                              = 0.0d0
 am_nu_SH_factor                            = 0.0d0
 D_ST_factor                                = 0.0d0
 D_SH_factor                                = 0.0d0 ! 1.0d0
-D_GSF_factor                               = 1.0d0
+D_GSF_factor                               = 0.0d0 ! 1.0d0    ! no GSF try
 D_ES_factor                                = 1.0d0
 D_SSI_factor                               = 1.0d0
 D_DSI_factor                               = 1.0d0
@@ -156,6 +170,8 @@ premix_omega                               = .true.
 remove_small_D_limit                       = 1d-10
 mixing_D_limit_for_log                     = 1d-10
 max_mdot_jump_for_rotation                 = 1.5d0
+
+
 ! smooth mixing coefficients across 2 adjacent cells to avoid infinite derivatives
 smooth_D_DSI                               = 2
 smooth_D_SH                                = 2
@@ -168,16 +184,16 @@ smooth_nu_ST                               = 2
 ! resolution
 ! time
 !max_model_number                          = 15000
-min_timestep_limit                         = 1d-18
+min_timestep_limit                         = 1d-3 ! sec ! 1d-18 to go to core-collapse
 varcontrol_target                          = 1d-3
-time_delta_coeff                           = 1.0d0
+time_delta_coeff                           = 0.75d0
 max_timestep_factor                        = 1.1d0
 min_J_div_delta_J                          = 50d0 ! 15d0
 dt_div_min_dr_div_cs_limit                 = 0.7d0
 dt_div_min_dr_div_cs_hard_limit            = 0.85d0
 
 ! space
-mesh_delta_coeff                           = 1.0d0
+mesh_delta_coeff                           = 0.8d0
 mesh_delta_coeff_for_highT                 = 3.0d0
 logT_max_for_standard_mesh_delta_coeff     = 9.2d0
 logT_min_for_highT_mesh_delta_coeff        = 9.3d0
@@ -188,42 +204,38 @@ max_allowed_nz                             = 20000
 set_min_D_mix                              = .true.
 min_D_mix                                  = 1d2 ! -2
 
+
+! ---------------------------------------------------------------
 ! solver
-! gold2_tol_max_residual2                  = 5e-07
-! gold_tol_max_residual2                   = 0.0005
-! gold2_tol_max_residual3                  = 0.0005
-! maxT_for_gold_tolerances                 = 1d9
-! make_gradr_sticky_in_solver_iters        = .true.
+gold2_tol_max_residual2                  = 5e-07
+gold_tol_max_residual2                   = 0.0005
+gold2_tol_max_residual3                  = 0.0005
+maxT_for_gold_tolerances                 = 1d9
+make_gradr_sticky_in_solver_iters        = .true.
 
-! velocity_tau_lower_bound                 = 1d4
+velocity_tau_lower_bound                 = 1d4
 
-! max_q_for_conv_timescale                 = 0.2d0
-! max_X_for_conv_timescale                 = 1d-6   ! must be > 0
-! min_dq_for_xa                            = 3d-4
-! sum_xa_hard_limit_for_highT              = 0.5d-2
-! logT_max_for_sum_xa_hard_limit           = 9.40d0
+max_q_for_conv_timescale                 = 0.2d0
+max_X_for_conv_timescale                 = 1d-6   ! must be > 0
+min_dq_for_xa                            = 3d-4
+sum_xa_hard_limit_for_highT              = 0.5d-2
+logT_max_for_sum_xa_hard_limit           = 9.40d0
 
-! sig_min_factor_for_high_Tcenter          = 0.01d0
-! Tcenter_min_for_sig_min_factor_full_on   = 3.2d9
-! Tcenter_max_for_sig_min_factor_full_off  = 2.8d9
+sig_min_factor_for_high_Tcenter          = 0.01d0
+Tcenter_min_for_sig_min_factor_full_on   = 3.2d9
+Tcenter_max_for_sig_min_factor_full_off  = 2.8d9
 
-! delta_lgRho_cntr_limit                   = 0.01d0
-! delta_lgRho_cntr_hard_limit              = 0.1d0
-! delta_lgRho_limit                        = 0.1d0
+delta_lgRho_cntr_limit                   = 0.01d0
+delta_lgRho_cntr_hard_limit              = 0.1d0
+delta_lgRho_limit                        = 0.1d0
 
-! delta_lgT_cntr_limit                     = 0.003d0
-! delta_lgT_cntr_hard_limit                = 0.1d0
+delta_lgT_cntr_limit                     = 0.003d0
+delta_lgT_cntr_hard_limit                = 0.1d0
 
-! delta_lgT_max_limit_only_after_near_zams = .true.
-! delta_lgT_max_limit                      = 0.003d0
-! delta_lgT_max_hard_limit                 = 0.1d0
+delta_lgT_max_limit_only_after_near_zams = .true.
+delta_lgT_max_limit                      = 0.003d0
+delta_lgT_max_hard_limit                 = 0.1d0
 
-! !!!!!!! when to stop -- reimplemented in run_star_extras.f90
-! non_fe_core_infall_limit                 = 1d99
-! non_fe_core_infall_mass                  = 1d99
-! fe_core_infall_limit                     = 0.3d8
-! when_to_stop_rtol                        = 1d-2
-! when_to_stop_atol                        = 1d-3
 
 
 / ! end of controls namelist

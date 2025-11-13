@@ -1,4 +1,7 @@
 &pgbinary
+
+Grid1_win_flag                      = .true.
+
 ! this only updates the right panel for the binary, not the star panels
 pgbinary_interval                   = 1
 !pause                              = .true.
@@ -16,7 +19,6 @@ Orbit_win_flag                      = .false.
 Orbit_win_width                     = 8
 
 
-Grid1_win_flag                      = .true.
 
 Grid1_win_width                     = 13
 Grid1_win_aspect_ratio              = 0.58
@@ -89,6 +91,8 @@ History_panels1_other_yaxis_name(2) = 'lg_mtransfer_rate'
 
 History_panels1_yaxis_name(3)       = 'acc_am_div_kep_am'
 History_panels1_other_yaxis_name(3) = 'accretion_mode'
+History_Panels1_other_ymin(1)       = -0.1d0
+History_Panels1_other_ymax(1)       = 3.1d0
 
 
 History_panels1_other_ymin(2)       = -10

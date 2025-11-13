@@ -34,6 +34,9 @@
 
       ! these routines are called by the standard run_star check_model
       contains
+        ! include 'dbconvpen/dbconvpen.inc'
+        ! include 'binary_disk.inc'
+
 
       subroutine extras_controls(id, ierr)
          integer, intent(in) :: id
@@ -65,6 +68,12 @@
          s% data_for_extra_history_header_items => data_for_extra_history_header_items
          s% how_many_extra_profile_header_items => how_many_extra_profile_header_items
          s% data_for_extra_profile_header_items => data_for_extra_profile_header_items
+
+         ! Johnston+24 overshooting
+         ! s% other_overshooting_scheme => extended_convective_penetration
+
+         ! extra cooling for accretor only
+         ! s% other_energy => extra_cooling_accretor
 
       end subroutine extras_controls
 

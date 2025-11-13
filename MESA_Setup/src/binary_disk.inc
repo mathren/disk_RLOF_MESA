@@ -428,7 +428,7 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   integer, intent(in) :: binary_id
   integer, intent(out) :: ierr
   real(dp) :: min_r, omega_ratio_acc
-  real(dp) :: j_acc_disk, j_acc_crit, j_interp
+  real(dp) :: j_acc_disk, j_acc_crit, j_impact, j_interp
   real(dp), parameter :: steepness = 10.0d0
   type (binary_info), pointer :: b
   ierr = 0
@@ -442,15 +442,16 @@ subroutine disk_accreted_material_j(binary_id, ierr)
   ! this mimics qualitatively Paczinski 1991's solution
   j_acc_disk = sqrt(standard_cgrav * b% m(b% a_i) * b% r(b% a_i)) ! specific Keplerian AM at accretor surface w.r.t. accretor
   j_acc_crit = 0.0d0 ! no AM accretion close to critical rotation, as per Paczynski's work
+  ! calculate specific AM accreted in direct impact
+  min_r = get_min_r(binary_id)
+  j_impact = sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
 
   omega_ratio_acc = b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-  print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
+  ! print *, "omega_div_omega_crit accretor = ", omega_ratio_acc, "j_keplerian2 = ", j_acc_disk
 
   if (b% accretion_mode == 1) then
      ! direct impact
-     min_r = get_min_r(binary_id)
-     b% s_accretor% accreted_material_j = &
-          sqrt(standard_cgrav * b% m(b% a_i) * 1.7d0*min_r)
+     b% s_accretor% accreted_material_j = j_impact
   else if (b% accretion_mode == 2) then
      ! disk is present
      ! interpolate between Keplerian and 0.0d0 using omega/omega_crit as interpolation variable
@@ -467,14 +468,6 @@ subroutine disk_accreted_material_j(binary_id, ierr)
              / &
              (b%x_ctrl(2) - b%x_ctrl(1))) &
              )))
-        print *, "Interp", 0.5d0*(j_acc_crit-j_acc_disk) * &
-             (1+tanh(steepness * ( &  ! tanh for smooth interpolation
-             omega_ratio_acc - &
-             (((b%x_ctrl(1) + b%x_ctrl(2))/2.0d0) &
-             / &
-             (b%x_ctrl(2) - b%x_ctrl(1))) &
-             ))), "<= 0?"
-
      end if
      b% s_accretor% accreted_material_j = j_interp
   else if (b% accretion_mode == 3) then
@@ -551,44 +544,45 @@ subroutine L2_adjust_mdots(binary_id, ierr)
   ! Set mdot for accretor
   ! First, check for disk
   min_r = get_min_r(binary_id)
-  ! print *, "min_r", min_r, "r_acc", b% r(b% a_i), "disk?", b% r(b% a_i) < min_r
-  if (b% r(b% a_i) < min_r) then
-     b% accretion_mode = 2 ! means there is a disk
-     ! print *, "There is a disk!"
-     disk_alpha = 0.1d0
-     ! print *, "input:", &
-     !      b% s_donor% m(1)/Msun, &
-     !      b% s_accretor% m(1)/Msun, &
-     !      b% mtransfer_rate/(Msun/secyer), &
-     !      b% separation/Rsun, &
-     !      disk_alpha, &
-     !      b% s_donor% mu(1), &
-     !      fL2, ierr
-     call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
-          b% s_accretor% m(1)/Msun, &
-          b% mtransfer_rate/(Msun/secyer), &
-          b% separation/Rsun, &
-          disk_alpha, &
-          b% s_donor% mu(1), &
-          fL2, ierr)
-  else
-     ! print *, "Direct impact!"
-     if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
-        b% accretion_mode = 3 ! 3 means there is a decretion disk
-        ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-        print *, "Direct impact and fast rotating: Force accretion disk anyways"
-        print *, b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-        b% accretion_mode = 2
-        print *, b% accretion_mode
+  if (b% rl_relative_gap(b% d_i) > 0) then
+     print *, "ONGOING MT?", b% rl_relative_gap(b% d_i)
+     ! ongoing mass transfer
+     if (b% r(b% a_i) < min_r) then
+        b% accretion_mode = 2 ! means there is a disk
+        ! print *, "There is a disk!"
+        disk_alpha = 0.1d0
+        ! print *, "input:", &
+        !      b% s_donor% m(1)/Msun, &
+        !      b% s_accretor% m(1)/Msun, &
+        !      b% mtransfer_rate/(Msun/secyer), &
+        !      b% separation/Rsun, &
+        !      disk_alpha, &
+        !      b% s_donor% mu(1), &
+        !      fL2, ierr
+        call eval_L2_mass_loss_fraction(b% s_donor% m(1)/Msun, &
+             b% s_accretor% m(1)/Msun, &
+             b% mtransfer_rate/(Msun/secyer), &
+             b% separation/Rsun, &
+             disk_alpha, &
+             b% s_donor% mu(1), &
+             fL2, ierr)
      else
-        ! direct impact, no disk, no update to fL2
-        b% accretion_mode = 1
-        print *, "Direct impact and slow rotating: Force accretion disk anyways"
-        print *, b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
-        b% accretion_mode = 2
+        ! print *, "Direct impact!"
+        if (b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf >= b% x_ctrl(1)) then
+           b% accretion_mode = 3 ! 3 means there is a decretion disk
+           ! print *, "Direct impact and a decretion disk?!", b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+           ! print *, "Direct impact and fast rotating: Force accretion disk anyways"
+           ! print *, b% s_accretor% omega_avg_surf / b% s_accretor% omega_crit_avg_surf
+        else
+           ! direct impact, no disk, no update to fL2
+           b% accretion_mode = 1
+           ! print *, "Direct impact and slow rotating: Force accretion disk anyways"
+        end if
      end if
+  else
+     ! no mass transfer
+     b% accretion_mode = 0
   end if
-
   ! turn off accretion luminosity for non-compact stars
   b% accretion_luminosity = 0.0d0
 
@@ -623,7 +617,6 @@ subroutine L2_adjust_mdots(binary_id, ierr)
   print *, "fL2:", fL2
   print *, "donor mdot", b% s_donor% mstar_dot, "accretor mdot", b% s_accretor% mstar_dot
   print *, "mdot acc input", actual_mtransfer_rate, b% component_mdot(b% a_i), b% mtransfer_rate * b% mass_transfer_beta
-
 end subroutine L2_adjust_mdots
 
 ! other_extra_jdot (for the orbit)
@@ -646,6 +639,9 @@ subroutine L2_extra_jdot(binary_id, ierr)
   b% extra_jdot = 0.0d0
   fL2 = 0.0d0
   L2_am_loss_rate = 0.0d0
+  ! no extra cooling in accretors
+  b% s_accretor% lxtra(1) = .false.
+
   ! disk_torque_on_orbit = 0.0d0
   print *, "b% accretion_mode", b% accretion_mode, b% mtransfer_rate
 
@@ -675,8 +671,37 @@ subroutine L2_extra_jdot(binary_id, ierr)
      ! assume decretion disk (omega2> x_ctrl(1) ~0.75 ~ Be stars) + direct impact
      ! assume no L2 mass loss?
      b% extra_jdot = 0.0d0
+     ! ! turn on extra cooling
+     ! b% s_accretor% lxtra(1) = .true.
   end if
 
   print *, "accretion mode=", b% accretion_mode
   print *, "extra_jdot = ", b% extra_jdot
 end subroutine L2_extra_jdot
+
+! --------------------------------------------------------------------------
+! Single star functions -- controlled by `use_other_energy` in inlist*
+! --------------------------------------------------------------------------
+! extra cooling for accretor when having direct impact on a decretion disk
+! subroutine extra_cooling_accretor(id, ierr)
+!   use star_def
+!   use auto_diff
+!   use const_def, only: Rsun
+!   integer, intent(in) :: id
+!   integer, intent(out) :: ierr
+!   type (star_info), pointer :: s
+!   integer :: k
+!   ierr = 0
+!   call star_ptr(id, s, ierr)
+!   if (ierr /= 0) return
+
+!   if (s% lxtra(1) .eqv. .true.) then
+!      ! impose rapid cooling on newly accreted material
+!      ! to prevent runaway radial expansion
+!      do k=1, s%nz, 1
+!         print *, s%r(k)
+!      end do
+!      stop "extra cooling when I should!!"
+!   end if
+! ! note that extra_heat is type(auto_diff_real_star_order1) so includes partials.
+! end subroutine extra_cooling_accretor
