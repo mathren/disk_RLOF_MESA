@@ -2,10 +2,18 @@ name: disk_RLOF
 channels:
   - conda-forge
 dependencies:
-  - python=3.11.5
-  - matplotlib=3.7.2
-  - numpy=1.26.0
-  - joblib=1.2.0
-  - fortls
+  - python=3.12
+  - numpy=2.2.6
+  - matplotlib=3.10.3
+  - pip=25.1.1
+  - astropy=7.1.0
+  - pip=25.1.1
+  - scipy=1.16.0
+  - jupyter=1.1.1
+  - joblib=1.5.1
+  - tqdm>=4.67.1
+  - python-lsp-server=1.13.0
   - pip:
     - git+https://github.com/mathren/compare_workdir_MESA/
+    - git+https://github.com/rjfarmer/pyMesa
+    - git+https://github.com/rjfarmer/mesaplot.git
