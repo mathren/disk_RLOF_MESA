@@ -108,7 +108,7 @@ def reader(myfile, ncols, nhead, fname=None):
     return data
 
 
-def getSrcCol(f, clean=True, convert=True, bin_fname=None):
+def get_src_col(f, clean=True, convert=True, bin_fname=None):
     """
     Read MESA output (history or profiles) and optionally
     save a copy in binary format for faster access later.
